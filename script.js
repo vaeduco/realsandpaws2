@@ -196,7 +196,8 @@
         throw new Error(j.detail || j.error || ("HTTP " + r.status));
       });
     }).catch(function (err) {
-      leadError.textContent = "Couldn't save: " + ((err && err.message) || "please try again.");
+      if (window.console && console.warn) console.warn("Lead save failed:", err && err.message);
+      leadError.textContent = "Sorry, we couldn't save your details. Please try again.";
     }).then(function () {
       leadSubmit.disabled = false;
       leadSubmit.textContent = "Start quiz";
