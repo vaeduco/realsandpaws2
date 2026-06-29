@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="RealAndPaws — a warm, friendly place to discover dog breeds, fun trivia, and practical care tips. Real love. Real paws.">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito:ital,wght@0,400;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <title>News — RealAndPaws 🐾</title>
+  <style>
+    /* ---------- Page-scoped: news list ---------- */
+    .news-list {
+      display: flex;
+      flex-direction: column;
+      gap: 1.4rem;
+      max-width: 760px;
+      margin-inline: auto;
+    }
+    .news-meta {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.5rem 0.9rem;
+      margin-bottom: 0.55rem;
+    }
+    .news-date { color: var(--muted); font-weight: 700; font-size: 0.9rem; margin: 0; }
+    .news-cat {
+      background: var(--peach);
+      color: var(--primary-dark);
+      font-weight: 800;
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      line-height: 1;
+      padding: 0.35rem 0.7rem;
+      border-radius: var(--radius-pill);
+    }
+    .news-title { font-size: 1.35rem; margin: 0 0 0.45rem; }
+    .news-summary { margin: 0; color: var(--text); }
+  </style>
+</head>
+<body>
+  <header class="site-header">
+    <div class="container header-inner">
+      <a class="brand" href="index.html">
+        <span class="paw" aria-hidden="true">🐾</span>
+        <span>RealAndPaws</span>
+      </a>
+      <button class="nav-toggle" aria-label="Toggle navigation menu" aria-expanded="false" aria-controls="primary-nav">
+        ☰
+      </button>
+      <nav class="nav" id="primary-nav" aria-label="Primary">
+        <ul>
+          <li><a href="index.html">Home</a></li>
+          <li><a href="breeds.html">Breeds</a></li>
+          <li><a href="trivia.html">Trivia</a></li>
+          <li><a href="care.html">Care Tips</a></li>
+          <li><a href="news.html" class="active" aria-current="page">News</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section class="section">
+      <div class="container">
+        <h1 class="section-title">Dog News</h1>
+        <p class="section-sub">The latest tails from the world of dogs — research, rescues, and good-boy headlines worth wagging about.</p>
+
+        <div class="news-list">
+
+          <article class="card news-item">
+            <div class="news-meta">
+              <span class="news-cat">Research</span>
+              <p class="news-date"><time datetime="2026-06-26">June 26, 2026</time></p>
+            </div>
+            <h2 class="news-title">New Study Finds Dogs Recognize Hundreds of Words</h2>
+            <p class="news-summary">Researchers report that the average family dog understands far more spoken language than once believed, with some pups reliably responding to over 200 commands, names, and everyday objects.</p>
+          </article>
+
+          <article class="card news-item">
+            <div class="news-meta">
+              <span class="news-cat">Community</span>
+              <p class="news-date"><time datetime="2026-06-22">June 22, 2026</time></p>
+            </div>
+            <h2 class="news-title">Cities Expand Off-Leash Parks as Dog Ownership Climbs</h2>
+            <p class="news-summary">A wave of new and bigger off-leash parks is opening across the country as record numbers of households welcome dogs, giving four-legged residents more room to run, sniff, and socialize.</p>
+          </article>
+
+          <article class="card news-item">
+            <div class="news-meta">
+              <span class="news-cat">Health</span>
+              <p class="news-date"><time datetime="2026-06-18">June 18, 2026</time></p>
+            </div>
+            <h2 class="news-title">Vets Warn of Hot Pavement and Parked-Car Dangers This Summer</h2>
+            <p class="news-summary">Veterinarians are urging owners to walk dogs in the cooler morning and evening hours and never leave them in parked cars, noting that summer asphalt can get hot enough to burn paw pads within seconds.</p>
+          </article>
+
+          <article class="card news-item">
+            <div class="news-meta">
+              <span class="news-cat">Rescue</span>
+              <p class="news-date"><time datetime="2026-06-11">June 11, 2026</time></p>
+            </div>
+            <h2 class="news-title">Shelter Adoptions Surge During Fee-Waived Weekend</h2>
+            <p class="news-summary">Animal shelters reported a sharp jump in adoptions this month as many locations waived fees, helping long-term residents — including senior and special-needs dogs — finally find their forever homes.</p>
+          </article>
+
+          <article class="card news-item">
+            <div class="news-meta">
+              <span class="news-cat">Wellness</span>
+              <p class="news-date"><time datetime="2026-06-04">June 4, 2026</time></p>
+            </div>
+            <h2 class="news-title">Therapy Dog Programs Keep Growing in Schools and Hospitals</h2>
+            <p class="news-summary">More schools, universities, and hospitals are bringing in certified therapy dogs to ease stress and anxiety, and early feedback from students and patients has been overwhelmingly positive.</p>
+          </article>
+
+          <article class="card news-item">
+            <div class="news-meta">
+              <span class="news-cat">Science</span>
+              <p class="news-date"><time datetime="2026-05-27">May 27, 2026</time></p>
+            </div>
+            <h2 class="news-title">Early Trial of Canine Cancer Immunotherapy Shows Promise</h2>
+            <p class="news-summary">An early-stage study of a new immunotherapy has produced encouraging results for dogs with certain cancers, raising hopes for gentler and more effective treatments down the road.</p>
+          </article>
+
+        </div>
+
+        <p class="photo-credit" style="text-align:center;color:var(--muted);font-size:0.9rem;max-width:640px;margin:2.4rem auto 0;">
+          Sample headlines for demonstration — swap in your own stories or wire up a live news feed anytime.
+        </p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <span class="footer-brand">🐾 RealAndPaws</span>
+      <nav class="footer-nav" aria-label="Footer">
+        <ul>
+          <li><a href="index.html">Home</a></li>
+          <li><a href="breeds.html">Breeds</a></li>
+          <li><a href="trivia.html">Trivia</a></li>
+          <li><a href="care.html">Care Tips</a></li>
+          <li><a href="news.html">News</a></li>
+        </ul>
+      </nav>
+      <p class="footer-note">&copy; <span id="year">2026</span> RealAndPaws · Real love. Real paws. 🐾</p>
+    </div>
+  </footer>
+
+  <script src="script.js" defer></script>
+</body>
+</html>

@@ -15,9 +15,11 @@ realsandpaws2/
 ├── breeds.html      # Popular breeds gallery (photos via the Dog CEO API)
 ├── trivia.html      # Fun dog facts + a random-fact generator
 ├── care.html        # Care tips accordion (feeding, grooming, exercise, health)
+├── news.html        # Dog news feed (sample articles)
 ├── styles.css       # Shared styles for the whole site
 ├── script.js        # Shared JS (mobile nav, active link, footer year)
 ├── favicon.svg      # Site icon
+├── images/          # Bundled assets (Cane Corso photo)
 ├── vercel.json      # Vercel static-hosting config
 ├── README.md        # This file
 └── .gitignore
