@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="description" content="RealAndPaws admin">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito:ital,wght@0,400;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <title>Admin — RealAndPaws 🐾</title>
+  <style>
+    .admin-wrap { max-width: 920px; margin: 0 auto; padding: clamp(1.5rem, 5vw, 3rem) var(--container-pad); }
+    .admin-card {
+      background: var(--white);
+      border: 1px solid var(--sand);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: clamp(1.4rem, 4vw, 2.2rem);
+    }
+    .admin-card h1 { font-size: 1.8rem; margin: 0 0 1.2rem; display: flex; align-items: center; gap: 0.5rem; }
+    .admin-sub { color: var(--muted); margin: 0 0 1.2rem; font-weight: 700; }
+    .admin-login { max-width: 360px; }
+    .admin-login label { display: block; font-weight: 800; color: var(--brown); margin-bottom: 0.9rem; }
+    .admin-login input {
+      display: block; width: 100%; margin-top: 0.35rem;
+      font-family: var(--font-body); font-size: 1rem;
+      padding: 0.65rem 0.9rem; border: 2px solid var(--sand); border-radius: 12px;
+      background: var(--white); color: var(--text);
+    }
+    .admin-login input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(232, 132, 60, 0.22); }
+    .admin-login .btn { width: 100%; margin-top: 0.4rem; }
+    .admin-error { color: #B23B2E; font-weight: 800; min-height: 1.2em; margin: 0 0 0.6rem; }
+    .admin-head { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; margin-bottom: 0.3rem; }
+    .admin-head h2 { margin: 0; font-size: 1.4rem; }
+    .admin-count { color: var(--muted); font-weight: 700; margin: 0 0 1.2rem; }
+    .admin-table-wrap { overflow-x: auto; }
+    .admin-table { width: 100%; border-collapse: collapse; font-size: 0.95rem; }
+    .admin-table th, .admin-table td { text-align: left; padding: 0.7rem 0.8rem; border-bottom: 1px solid var(--sand); white-space: nowrap; }
+    .admin-table th { font-family: var(--font-head); color: var(--brown); font-weight: 700; background: var(--cream); position: sticky; top: 0; }
+    .admin-table td { color: var(--text); }
+    .admin-table tbody tr:hover { background: var(--cream); }
+    .admin-empty { color: var(--muted); font-weight: 700; }
+    .admin-loading { color: var(--muted); font-weight: 700; }
+  </style>
+</head>
+<body>
+  <main class="admin-wrap">
+    <div class="admin-card">
+      <h1><span aria-hidden="true">🐾</span> RealAndPaws Admin</h1>
+
+      <p class="admin-loading" id="admin-loading">Loading…</p>
+
+      <form class="admin-login" id="login-form" hidden>
+        <p class="admin-sub">Sign in to view quiz leads.</p>
+        <label>Username
+          <input type="text" name="username" autocomplete="username" required>
+        </label>
+        <label>Password
+          <input type="password" name="password" autocomplete="current-password" required>
+        </label>
+        <p class="admin-error" id="login-error" role="alert"></p>
+        <button class="btn btn-primary" type="submit">Log in</button>
+      </form>
+
+      <div id="leads-view" hidden>
+        <div class="admin-head">
+          <h2>Quiz leads</h2>
+          <button class="btn btn-ghost" type="button" id="logout-btn">Log out</button>
+        </div>
+        <p class="admin-count" id="leads-count"></p>
+        <div class="admin-table-wrap">
+          <table class="admin-table">
+            <thead>
+              <tr><th>Name</th><th>Email</th><th>Phone</th><th>Date submitted</th></tr>
+            </thead>
+            <tbody id="leads-body"></tbody>
+          </table>
+        </div>
+        <p class="admin-empty" id="leads-empty" hidden>No leads yet.</p>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    (function () {
+      var loading = document.getElementById("admin-loading");
+      var loginForm = document.getElementById("login-form");
+      var loginError = document.getElementById("login-error");
+      var leadsView = document.getElementById("leads-view");
+      var leadsBody = document.getElementById("leads-body");
+      var leadsCount = document.getElementById("leads-count");
+      var leadsEmpty = document.getElementById("leads-empty");
+      var logoutBtn = document.getElementById("logout-btn");
+
+      function esc(s) { var d = document.createElement("div"); d.textContent = s == null ? "" : String(s); return d.innerHTML; }
+      function fmtDate(iso) {
+        var d = new Date(iso);
+        if (isNaN(d.getTime())) return esc(iso || "");
+        return d.toLocaleString(undefined, { year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
+      }
+
+      function showLogin() { loading.hidden = true; leadsView.hidden = true; loginForm.hidden = false; }
+
+      function showLeads(leads) {
+        loading.hidden = true;
+        loginForm.hidden = true;
+        leadsView.hidden = false;
+        leadsCount.textContent = leads.length + (leads.length === 1 ? " lead" : " leads");
+        if (!leads.length) { leadsBody.innerHTML = ""; leadsEmpty.hidden = false; return; }
+        leadsEmpty.hidden = true;
+        leadsBody.innerHTML = leads.map(function (l) {
+          return "<tr><td>" + esc(l.name) + "</td><td>" + esc(l.email) + "</td><td>" +
+                 esc(l.phone) + "</td><td>" + fmtDate(l.created_at) + "</td></tr>";
+        }).join("");
+      }
+
+      function loadLeads() {
+        return fetch("/api/admin/leads", { headers: { Accept: "application/json" } })
+          .then(function (r) {
+            if (r.status === 401) { showLogin(); return null; }
+            if (!r.ok) throw new Error("Could not load leads.");
+            return r.json();
+          })
+          .then(function (data) { if (data) showLeads(data.leads || []); });
+      }
+
+      loginForm.addEventListener("submit", function (e) {
+        e.preventDefault();
+        loginError.textContent = "";
+        var btn = loginForm.querySelector("button");
+        var els = loginForm.elements;
+        btn.disabled = true;
+        fetch("/api/admin/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ username: els["username"].value, password: els["password"].value })
+        })
+          .then(function (r) {
+            if (r.ok) return loadLeads();
+            return r.json().catch(function () { return {}; }).then(function (j) { throw new Error(j.error || "Login failed."); });
+          })
+          .catch(function (err) { loginError.textContent = err.message || "Login failed."; })
+          .then(function () { btn.disabled = false; });
+      });
+
+      logoutBtn.addEventListener("click", function () {
+        fetch("/api/admin/logout", { method: "POST" }).then(function () { loginForm.reset(); showLogin(); });
+      });
+
+      // On load, check for an existing valid session.
+      loadLeads().catch(function () { showLogin(); });
+    })();
+  </script>
+</body>
+</html>

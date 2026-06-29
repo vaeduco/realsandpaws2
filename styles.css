@@ -462,6 +462,25 @@ a.card:hover { text-decoration: none; }
 .quiz-result-score { color: var(--text); font-size: 1.1rem; margin: 0 0 1.5rem; }
 .quiz-result-actions { display: flex; flex-wrap: wrap; gap: 0.7rem; justify-content: center; }
 
+/* Quiz lead form (shown before the quiz starts) */
+.quiz-lead-intro { margin: 0 0 1.1rem; color: var(--text); font-weight: 700; }
+.quiz-field { display: block; margin-bottom: 0.9rem; }
+.quiz-field span { display: block; font-weight: 800; color: var(--brown); margin-bottom: 0.35rem; font-size: 0.95rem; }
+.quiz-field input {
+  width: 100%;
+  font-family: var(--font-body);
+  font-size: 1rem;
+  padding: 0.65rem 0.9rem;
+  border: 2px solid var(--sand);
+  border-radius: 12px;
+  background: var(--white);
+  color: var(--text);
+}
+.quiz-field input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(232, 132, 60, 0.22); }
+.quiz-lead-error { color: #B23B2E; font-weight: 800; margin: 0.2rem 0 1rem; }
+.quiz-lead-error:empty { margin: 0; }
+#quiz-lead .btn { width: 100%; }
+
 /* ---------- Breed search (in the nav) ---------- */
 .nav-search { display: flex; align-items: center; position: relative; }
 .search-form { position: relative; display: flex; align-items: center; width: 100%; }

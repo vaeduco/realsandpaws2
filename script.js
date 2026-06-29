@@ -120,7 +120,17 @@
         '<button type="button" class="quiz-close" aria-label="Close quiz">&times;</button>' +
       '</div>' +
       '<div class="quiz-body">' +
-        '<div id="quiz-view">' +
+        '<div id="quiz-lead">' +
+          '<p class="quiz-lead-intro">Just a few details before you start the quiz.</p>' +
+          '<form id="quiz-lead-form" novalidate>' +
+            '<label class="quiz-field"><span>Name</span><input type="text" name="name" autocomplete="name" required></label>' +
+            '<label class="quiz-field"><span>Email</span><input type="email" name="email" autocomplete="email" required></label>' +
+            '<label class="quiz-field"><span>Phone</span><input type="tel" name="phone" autocomplete="tel" required></label>' +
+            '<p class="quiz-lead-error" id="quiz-lead-error" role="alert"></p>' +
+            '<button type="submit" class="btn btn-primary" id="quiz-lead-submit">Start quiz</button>' +
+          '</form>' +
+        '</div>' +
+        '<div id="quiz-view" hidden>' +
           '<p class="quiz-notice" id="quiz-notice" role="alert"></p>' +
           '<form id="quiz-form"></form>' +
         '</div>' +
@@ -136,6 +146,10 @@
   var modal = overlay.querySelector(".quiz-modal");
   var form = overlay.querySelector("#quiz-form");
   var notice = overlay.querySelector("#quiz-notice");
+  var leadView = overlay.querySelector("#quiz-lead");
+  var leadForm = overlay.querySelector("#quiz-lead-form");
+  var leadError = overlay.querySelector("#quiz-lead-error");
+  var leadSubmit = overlay.querySelector("#quiz-lead-submit");
   var quizView = overlay.querySelector("#quiz-view");
   var resultView = overlay.querySelector("#quiz-result");
   var foot = overlay.querySelector("#quiz-foot");
@@ -145,10 +159,46 @@
   var lastFocused = null;
 
   function showView(which) {
-    var isQuiz = which === "quiz";
-    quizView.hidden = !isQuiz;
-    foot.hidden = !isQuiz;
-    resultView.hidden = isQuiz;
+    leadView.hidden = which !== "lead";
+    quizView.hidden = which !== "quiz";
+    resultView.hidden = which !== "result";
+    foot.hidden = which !== "quiz"; // the Submit button belongs to the quiz view only
+  }
+
+  function showLead() {
+    leadForm.reset();
+    leadError.textContent = "";
+    leadSubmit.disabled = false;
+    leadSubmit.textContent = "Start quiz";
+    showView("lead");
+    bodyEl.scrollTop = 0;
+  }
+
+  // Capture name/email/phone, save it, then start the quiz.
+  function submitLead(e) {
+    e.preventDefault();
+    var els = leadForm.elements;
+    var name = els["name"].value.trim();
+    var email = els["email"].value.trim();
+    var phone = els["phone"].value.trim();
+    if (!name || !email || !phone) { leadError.textContent = "Please fill in all three fields."; return; }
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { leadError.textContent = "Please enter a valid email address."; return; }
+    leadError.textContent = "";
+    leadSubmit.disabled = true;
+    leadSubmit.textContent = "Saving…";
+    fetch("/api/lead", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name: name, email: email, phone: phone })
+    }).then(function (r) {
+      if (!r.ok) throw new Error("save failed");
+      renderQuiz();
+    }).catch(function () {
+      leadError.textContent = "Sorry, we couldn't save your details. Please try again.";
+    }).then(function () {
+      leadSubmit.disabled = false;
+      leadSubmit.textContent = "Start quiz";
+    });
   }
 
   function renderQuiz() {
@@ -217,10 +267,11 @@
 
   function openQuiz() {
     lastFocused = document.activeElement;
-    renderQuiz();
+    showLead();
     overlay.hidden = false;
     document.body.style.overflow = "hidden";
-    closeBtn.focus();
+    var firstField = leadForm.querySelector("input");
+    if (firstField) firstField.focus(); else closeBtn.focus();
     document.addEventListener("keydown", onKeydown);
   }
 
@@ -258,6 +309,7 @@
   Array.prototype.forEach.call(triggers, function (t) { t.addEventListener("click", openQuiz); });
   closeBtn.addEventListener("click", closeQuiz);
   submitBtn.addEventListener("click", onSubmit);
+  leadForm.addEventListener("submit", submitLead);
   overlay.addEventListener("click", function (e) { if (e.target === overlay) closeQuiz(); });
   resultView.addEventListener("click", function (e) {
     var btn = e.target.closest("[data-action]");

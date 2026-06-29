@@ -9,3 +9,8 @@ node_modules/
 
 # Logs
 *.log
+
+# Local env files (keep .env.example tracked)
+.env
+.env.local
+.env.*.local

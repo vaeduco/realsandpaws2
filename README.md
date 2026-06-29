@@ -1,9 +1,10 @@
 # RealAndPaws 🐾
 
-RealAndPaws is a simple, friendly website for dog lovers — browse popular breeds,
-enjoy fun trivia, pick up practical care tips, and catch the latest dog news. It's
-plain HTML, CSS, and JavaScript with no build step or framework; the only moving
-part is one tiny zero-dependency serverless function that powers the news feed.
+RealAndPaws is a friendly website for dog lovers — browse popular breeds, enjoy fun
+trivia, pick up practical care tips, catch the latest dog news, and take a dog quiz.
+It's plain HTML, CSS, and JavaScript with no build step or framework; a handful of
+tiny zero-dependency serverless functions power the news feed, the quiz lead capture,
+and a password-protected admin page, with lead data stored in Supabase.
 
 Breed photos load at runtime from the free [Dog CEO API](https://dog.ceo), and the
 News page pulls fresh, tone-filtered headlines server-side — both degrade gracefully
@@ -22,9 +23,15 @@ realsandpaws2/
 ├── script.js        # Shared JS (mobile nav, active link, footer year)
 ├── favicon.svg      # Site icon
 ├── images/          # Bundled assets (Cane Corso photo)
+├── admin.html       # Protected admin page (quiz leads), served at /admin
 ├── api/
-│   └── news.js      # Serverless function: tone-filtered dog news (Vercel)
-├── vercel.json      # Vercel static-hosting config
+│   ├── news.js      # GET: tone-filtered dog news
+│   ├── lead.js      # POST: save a quiz lead to Supabase
+│   └── admin/       # login.js · leads.js · logout.js (session-gated)
+├── lib/
+│   └── server.js    # Shared server helpers (auth + Supabase) — not an endpoint
+├── vercel.json      # Vercel config (static + functions + /admin rewrite)
+├── .env.example     # Required environment variables (names only, no secrets)
 ├── README.md        # This file
 └── .gitignore
 ```
@@ -102,3 +109,61 @@ Tune the feed by editing `api/news.js` — the search query and the `ALLOW` /
 **Local note:** `python3 -m http.server` only serves static files, so `/api/news`
 won't run locally and you'll see the curated articles. To exercise the function
 locally, run `vercel dev` instead (requires the Vercel CLI).
+
+## Quiz leads + admin (Supabase)
+
+Before the quiz starts, visitors fill in **name, email, and phone**. On submit the
+details are saved to a Supabase table called `quiz_leads`, and a protected
+**`/admin`** page lists them (newest first).
+
+### How it's wired (and why it's safe)
+
+The browser never talks to Supabase directly. All access goes through serverless
+functions that use the **service-role key** (a server-only env var):
+
+- `POST /api/lead` — validates the three fields and inserts the lead.
+- `POST /api/admin/login` — checks `ADMIN_USER` / `ADMIN_PASSWORD` (constant-time)
+  and sets an HMAC-signed, HttpOnly, SameSite session cookie (8-hour expiry).
+- `GET /api/admin/leads` — returns the leads **only** for a request with a valid
+  session cookie; otherwise `401`. The `/admin` page shows just a login form until
+  you're authenticated, so the data is never exposed to anyone who isn't logged in.
+- `POST /api/admin/logout` — clears the cookie.
+
+Keys and the password live in environment variables, never in the code.
+
+### 1. Create the table in Supabase
+
+In the Supabase dashboard → **SQL Editor**, run:
+
+```sql
+create table if not exists public.quiz_leads (
+  id          bigint generated always as identity primary key,
+  name        text        not null,
+  email       text        not null,
+  phone       text        not null,
+  created_at  timestamptz not null default now()
+);
+
+-- Lock the table down: with RLS on and no policies, the public/anon key has no
+-- access. Our serverless functions use the service-role key, which bypasses RLS.
+alter table public.quiz_leads enable row level security;
+```
+
+### 2. Set environment variables (Vercel → Project → Settings → Environment Variables)
+
+See [`.env.example`](.env.example). All five are required:
+
+| Variable | What it is |
+| --- | --- |
+| `SUPABASE_URL` | e.g. `https://xxxx.supabase.co` |
+| `SUPABASE_SERVICE_ROLE_KEY` | Supabase **service_role** key (Settings → API). Server-only — never expose it. |
+| `ADMIN_USER` | Admin login username |
+| `ADMIN_PASSWORD` | Admin login password |
+| `ADMIN_SECRET` | Random string that signs the session cookie — generate with `openssl rand -hex 32` |
+
+Redeploy after adding them. Then open **`/admin`** and log in.
+
+**Local note:** the lead form and `/admin` need the functions, so use `vercel dev`
+(with a local `.env`) rather than `python3 -m http.server`. Over plain-HTTP localhost
+the session cookie is set without the `Secure` flag automatically; in production
+(HTTPS on Vercel) it's `Secure`.
