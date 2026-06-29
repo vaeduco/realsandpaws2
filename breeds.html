@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="RealAndPaws — a warm, friendly place to discover dog breeds, fun trivia, and practical care tips. Real love. Real paws.">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito:ital,wght@0,400;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <title>Breeds — RealAndPaws 🐾</title>
+  <style>
+    /* ---------- Page-scoped: breed cards ---------- */
+    .breed-card { padding: 0; overflow: hidden; }
+    .breed-card .breed-body { padding: 1.4rem 1.6rem 1.6rem; display: flex; flex-direction: column; }
+
+    .breed-photo {
+      position: relative;
+      aspect-ratio: 4 / 3;
+      width: 100%;
+      border-radius: 0;
+      overflow: hidden;
+      background: linear-gradient(150deg, var(--peach) 0%, var(--accent) 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    /* Placeholder emoji sits behind the image until it loads */
+    .breed-photo::before {
+      content: "🐶";
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 3rem;
+      line-height: 1;
+      filter: drop-shadow(0 2px 4px rgba(91, 58, 33, 0.25));
+    }
+    .breed-photo img {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      opacity: 0;
+      transition: opacity 0.4s ease;
+    }
+    .breed-photo.is-loaded img { opacity: 1; }
+    /* When loaded, hide the emoji behind it for cleanliness */
+    .breed-photo.is-loaded::before { opacity: 0; }
+
+    /* Tag chips for typical behaviors */
+    .breed-tags-label {
+      font-weight: 800;
+      color: var(--muted);
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin: 0.2rem 0 0.55rem;
+    }
+    .breed-tags {
+      list-style: none;
+      margin: auto 0 0;
+      padding: 0;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+    }
+    .breed-tags li {
+      background: var(--peach);
+      color: var(--primary-dark);
+      font-weight: 700;
+      font-size: 0.85rem;
+      line-height: 1;
+      padding: 0.4rem 0.75rem;
+      border-radius: var(--radius-pill);
+    }
+  </style>
+</head>
+<body>
+  <header class="site-header">
+    <div class="container header-inner">
+      <a class="brand" href="index.html">
+        <span class="paw" aria-hidden="true">🐾</span>
+        <span>RealAndPaws</span>
+      </a>
+      <button class="nav-toggle" aria-label="Toggle navigation menu" aria-expanded="false" aria-controls="primary-nav">
+        ☰
+      </button>
+      <nav class="nav" id="primary-nav" aria-label="Primary">
+        <ul>
+          <li><a href="index.html">Home</a></li>
+          <li><a href="breeds.html" class="active" aria-current="page">Breeds</a></li>
+          <li><a href="trivia.html">Trivia</a></li>
+          <li><a href="care.html">Care Tips</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section class="section">
+      <div class="container">
+        <h1 class="section-title">Meet the Breeds</h1>
+        <p class="section-sub">Ten of the world's most-loved dogs, each with their own personality, quirks, and a whole lot of heart. Photos load fresh from the Dog CEO API, so every visit brings new furry faces.</p>
+
+        <div class="grid" id="breed-grid">
+          <!-- Labrador Retriever -->
+          <article class="card breed-card" data-breed="labrador">
+            <div class="breed-photo">
+              <img loading="lazy" alt="A Labrador Retriever" data-breed-name="Labrador Retriever">
+            </div>
+            <div class="breed-body">
+              <h3>Labrador Retriever</h3>
+              <p>America's favorite for years running — outgoing, eager to please, and endlessly patient with kids and chaos alike.</p>
+              <p class="breed-tags-label">Typical behaviors</p>
+              <ul class="breed-tags">
+                <li>Friendly</li>
+                <li>Energetic</li>
+                <li>Loyal</li>
+              </ul>
+            </div>
+          </article>
+
+          <!-- German Shepherd -->
+          <article class="card breed-card" data-breed="german/shepherd">
+            <div class="breed-photo">
+              <img loading="lazy" alt="A German Shepherd" data-breed-name="German Shepherd">
+            </div>
+            <div class="breed-body">
+              <h3>German Shepherd</h3>
+              <p>Confident and brilliant working dogs, prized for their courage and devotion. They thrive with a job to do and a person to protect.</p>
+              <p class="breed-tags-label">Typical behaviors</p>
+              <ul class="breed-tags">
+                <li>Intelligent</li>
+                <li>Protective</li>
+                <li>Trainable</li>
+              </ul>
+            </div>
+          </article>
+
+          <!-- Golden Retriever -->
+          <article class="card breed-card" data-breed="retriever/golden">
+            <div class="breed-photo">
+              <img loading="lazy" alt="A Golden Retriever" data-breed-name="Golden Retriever">
+            </div>
+            <div class="breed-body">
+              <h3>Golden Retriever</h3>
+              <p>Gentle, golden, and gloriously goofy. Their sunny temperament makes them wonderful family dogs and devoted companions.</p>
+              <p class="breed-tags-label">Typical behaviors</p>
+              <ul class="breed-tags">
+                <li>Gentle</li>
+                <li>Affectionate</li>
+                <li>Playful</li>
+              </ul>
+            </div>
+          </article>
+
+          <!-- French Bulldog -->
+          <article class="card breed-card" data-breed="bulldog/french">
+            <div class="breed-photo">
+              <img loading="lazy" alt="A French Bulldog" data-breed-name="French Bulldog">
+            </div>
+            <div class="breed-body">
+              <h3>French Bulldog</h3>
+              <p>Compact charmers with bat ears and big personalities. Low-key and adaptable, they're happiest curled up beside their humans.</p>
+              <p class="breed-tags-label">Typical behaviors</p>
+              <ul class="breed-tags">
+                <li>Adaptable</li>
+                <li>Charming</li>
+                <li>Easygoing</li>
+              </ul>
+            </div>
+          </article>
+
+          <!-- Beagle -->
+          <article class="card breed-card" data-breed="beagle">
+            <div class="breed-photo">
+              <img loading="lazy" alt="A Beagle" data-breed-name="Beagle">
+            </div>
+            <div class="breed-body">
+              <h3>Beagle</h3>
+              <p>Merry, curious scent hounds led nose-first through life. Sociable and cheerful, they love company and a good adventure.</p>
+              <p class="breed-tags-label">Typical behaviors</p>
+              <ul class="breed-tags">
+                <li>Curious</li>
+                <li>Merry</li>
+                <li>Sociable</li>
+              </ul>
+            </div>
+          </article>
+
+          <!-- Poodle -->
+          <article class="card breed-card" data-breed="poodle">
+            <div class="breed-photo">
+              <img loading="lazy" alt="A Poodle" data-breed-name="Poodle">
+            </div>
+            <div class="breed-body">
+              <h3>Poodle</h3>
+              <p>Famously clever and elegant, poodles come in three sizes. Behind the fancy coat is an athletic, eager-to-learn companion.</p>
+              <p class="breed-tags-label">Typical behaviors</p>
+              <ul class="breed-tags">
+                <li>Smart</li>
+                <li>Elegant</li>
+                <li>Active</li>
+              </ul>
+            </div>
+          </article>
+
+          <!-- Pug -->
+          <article class="card breed-card" data-breed="pug">
+            <div class="breed-photo">
+              <img loading="lazy" alt="A Pug" data-breed-name="Pug">
+            </div>
+            <div class="breed-body">
+              <h3>Pug</h3>
+              <p>Wrinkly, comical, and full of love. Pugs were bred to be companions and take that job very seriously — usually from your lap.</p>
+              <p class="breed-tags-label">Typical behaviors</p>
+              <ul class="breed-tags">
+                <li>Comical</li>
+                <li>Affectionate</li>
+                <li>Mellow</li>
+              </ul>
+            </div>
+          </article>
+
+          <!-- Siberian Husky -->
+          <article class="card breed-card" data-breed="husky">
+            <div class="breed-photo">
+              <img loading="lazy" alt="A Siberian Husky" data-breed-name="Siberian Husky">
+            </div>
+            <div class="breed-body">
+              <h3>Siberian Husky</h3>
+              <p>Striking sled dogs built for endurance and packed with energy. Friendly and free-spirited, they love to run and to "talk."</p>
+              <p class="breed-tags-label">Typical behaviors</p>
+              <ul class="breed-tags">
+                <li>Energetic</li>
+                <li>Independent</li>
+                <li>Vocal</li>
+              </ul>
+            </div>
+          </article>
+
+          <!-- Dachshund -->
+          <article class="card breed-card" data-breed="dachshund">
+            <div class="breed-photo">
+              <img loading="lazy" alt="A Dachshund" data-breed-name="Dachshund">
+            </div>
+            <div class="breed-body">
+              <h3>Dachshund</h3>
+              <p>The lovable "wiener dog" — bold, clever, and bigger in spirit than in stature. Devoted to their people and surprisingly brave.</p>
+              <p class="breed-tags-label">Typical behaviors</p>
+              <ul class="breed-tags">
+                <li>Bold</li>
+                <li>Clever</li>
+                <li>Devoted</li>
+              </ul>
+            </div>
+          </article>
+
+          <!-- Boxer -->
+          <article class="card breed-card" data-breed="boxer">
+            <div class="breed-photo">
+              <img loading="lazy" alt="A Boxer" data-breed-name="Boxer">
+            </div>
+            <div class="breed-body">
+              <h3>Boxer</h3>
+              <p>Playful, patient, and forever young at heart. Boxers are athletic family dogs who bond deeply and never quite outgrow the zoomies.</p>
+              <p class="breed-tags-label">Typical behaviors</p>
+              <ul class="breed-tags">
+                <li>Playful</li>
+                <li>Loyal</li>
+                <li>Energetic</li>
+              </ul>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <span class="footer-brand">🐾 RealAndPaws</span>
+      <nav class="footer-nav" aria-label="Footer">
+        <ul>
+          <li><a href="index.html">Home</a></li>
+          <li><a href="breeds.html">Breeds</a></li>
+          <li><a href="trivia.html">Trivia</a></li>
+          <li><a href="care.html">Care Tips</a></li>
+        </ul>
+      </nav>
+      <p class="footer-note">&copy; <span id="year">2026</span> RealAndPaws · Real love. Real paws. 🐾</p>
+    </div>
+  </footer>
+
+  <script src="script.js" defer></script>
+  <script>
+    // Page-scoped: fetch a real photo per breed from the free, no-key Dog CEO API.
+    // On any failure, gracefully keep the warm gradient + 🐶 placeholder.
+    (function () {
+      const cards = document.querySelectorAll('#breed-grid .breed-card');
+
+      cards.forEach(function (card) {
+        const slug = card.getAttribute('data-breed');
+        const photo = card.querySelector('.breed-photo');
+        const img = card.querySelector('img');
+        if (!slug || !img || !photo) return;
+
+        // If the image errors out for any reason, fall back to the placeholder.
+        img.addEventListener('error', function () {
+          photo.classList.remove('is-loaded');
+          img.removeAttribute('src');
+        });
+
+        // Reveal the photo only once it has actually loaded.
+        img.addEventListener('load', function () {
+          if (img.getAttribute('src')) {
+            photo.classList.add('is-loaded');
+          }
+        });
+
+        fetch('https://dog.ceo/api/breed/' + slug + '/images/random')
+          .then(function (res) {
+            if (!res.ok) throw new Error('HTTP ' + res.status);
+            return res.json();
+          })
+          .then(function (data) {
+            if (data && data.status === 'success' && data.message) {
+              img.src = data.message;
+            }
+            // Otherwise: leave the graceful placeholder in place.
+          })
+          .catch(function () {
+            // Network/parse failure — keep the gradient + 🐶 placeholder.
+          });
+      });
+    })();
+  </script>
+</body>
+</html>

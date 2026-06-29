@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="RealAndPaws — a warm, friendly place to discover dog breeds, fun trivia, and practical care tips. Real love. Real paws.">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito:ital,wght@0,400;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <title>Care Tips — RealAndPaws 🐾</title>
+  <style>
+    /* ---- Page-scoped: accordion (care.html only) ---- */
+    .accordion {
+      display: flex;
+      flex-direction: column;
+      gap: 1.2rem;
+      max-width: 760px;
+      margin-inline: auto;
+    }
+    /* Each accordion item reuses the shared .card look but tightens padding */
+    .accordion .card { padding: 0; overflow: hidden; }
+
+    .acc-header {
+      appearance: none;
+      width: 100%;
+      margin: 0;
+      border: 0;
+      background: transparent;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      padding: 1.2rem 1.4rem;
+      font-family: var(--font-head);
+      font-weight: 700;
+      font-size: 1.3rem;
+      color: var(--brown);
+      text-align: left;
+      line-height: 1.2;
+      transition: background-color 0.18s ease;
+    }
+    .acc-header:hover { background: var(--sand); }
+
+    .acc-emoji { font-size: 1.8rem; line-height: 1; flex: 0 0 auto; }
+    .acc-title { flex: 1 1 auto; }
+
+    .acc-chevron {
+      flex: 0 0 auto;
+      font-size: 1.2rem;
+      color: var(--primary-dark);
+      transition: transform 0.25s ease;
+    }
+    .acc-header[aria-expanded="true"] .acc-chevron { transform: rotate(180deg); }
+
+    /* Smooth expand/collapse via max-height */
+    .acc-panel {
+      overflow: hidden;
+      max-height: 0;
+      transition: max-height 0.3s ease;
+    }
+
+    .acc-panel-inner {
+      padding: 0 1.4rem 1.4rem;
+      border-top: 1px solid var(--sand);
+    }
+    .acc-panel-inner ul {
+      margin: 1rem 0 0;
+      padding-left: 1.2rem;
+    }
+    .acc-panel-inner li { margin-bottom: 0.5rem; }
+    .acc-panel-inner li:last-child { margin-bottom: 0; }
+
+    /* Friendly vet reminder note */
+    .vet-note {
+      max-width: 760px;
+      margin: 2.2rem auto 0;
+      background: var(--white);
+      border: 1px solid var(--sand);
+      border-left: 5px solid var(--primary);
+      border-radius: var(--radius);
+      padding: 1.2rem 1.4rem;
+      box-shadow: var(--shadow);
+      display: flex;
+      gap: 0.9rem;
+      align-items: flex-start;
+    }
+    .vet-note .vet-emoji { font-size: 1.6rem; line-height: 1.2; flex: 0 0 auto; }
+    .vet-note p { margin: 0; color: var(--text); }
+
+    @media (prefers-reduced-motion: reduce) {
+      .acc-panel { transition: none; }
+      .acc-chevron { transition: none; }
+    }
+  </style>
+</head>
+<body>
+  <header class="site-header">
+    <div class="container header-inner">
+      <a class="brand" href="index.html">
+        <span class="paw" aria-hidden="true">🐾</span>
+        <span>RealAndPaws</span>
+      </a>
+      <button class="nav-toggle" aria-label="Toggle navigation menu" aria-expanded="false" aria-controls="primary-nav">
+        ☰
+      </button>
+      <nav class="nav" id="primary-nav" aria-label="Primary">
+        <ul>
+          <li><a href="index.html">Home</a></li>
+          <li><a href="breeds.html">Breeds</a></li>
+          <li><a href="trivia.html">Trivia</a></li>
+          <li><a href="care.html" class="active" aria-current="page">Care Tips</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section class="section">
+      <div class="container">
+        <h1 class="section-title">Care Tips 🦴</h1>
+        <p class="section-sub">Friendly, practical basics to help your best friend stay happy, healthy, and well-loved. Tap a topic below to dig into the details.</p>
+
+        <div class="accordion" id="careAccordion">
+
+          <!-- 1) Feeding -->
+          <div class="card">
+            <h2>
+              <button class="acc-header" id="acc-feeding-btn" aria-expanded="true" aria-controls="acc-feeding-panel">
+                <span class="acc-emoji" aria-hidden="true">🍖</span>
+                <span class="acc-title">Feeding</span>
+                <span class="acc-chevron" aria-hidden="true">▾</span>
+              </button>
+            </h2>
+            <div class="acc-panel" id="acc-feeding-panel" role="region" aria-labelledby="acc-feeding-btn">
+              <div class="acc-panel-inner">
+                <ul>
+                  <li>Feed a complete, age-appropriate diet (puppy, adult, or senior) and follow the portion guidance on the label, adjusting for your dog's weight and activity.</li>
+                  <li>Stick to a consistent schedule — most adult dogs do well with two measured meals a day rather than free-feeding.</li>
+                  <li>Always keep fresh, clean water available and refill it daily.</li>
+                  <li>Keep treats to about 10% of daily calories so meals stay balanced.</li>
+                  <li>Avoid foods that are toxic to dogs, including chocolate, grapes and raisins, onions, garlic, xylitol (a sweetener), macadamia nuts, and alcohol.</li>
+                  <li>Make any diet change gradually over 7–10 days to avoid an upset stomach.</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <!-- 2) Grooming -->
+          <div class="card">
+            <h2>
+              <button class="acc-header" id="acc-grooming-btn" aria-expanded="false" aria-controls="acc-grooming-panel">
+                <span class="acc-emoji" aria-hidden="true">🛁</span>
+                <span class="acc-title">Grooming</span>
+                <span class="acc-chevron" aria-hidden="true">▾</span>
+              </button>
+            </h2>
+            <div class="acc-panel" id="acc-grooming-panel" role="region" aria-labelledby="acc-grooming-btn">
+              <div class="acc-panel-inner">
+                <ul>
+                  <li>Brush regularly — short coats may need it weekly, while long or double coats benefit from a few sessions each week to prevent mats.</li>
+                  <li>Bathe only as needed (often every few weeks to a few months) using a dog-formulated shampoo; over-bathing can dry out skin.</li>
+                  <li>Trim nails when you can hear them clicking on the floor, taking care to avoid the sensitive quick.</li>
+                  <li>Check and gently clean ears, and watch for redness, odor, or excess wax that could signal a problem.</li>
+                  <li>Brush teeth several times a week with dog-safe toothpaste — never human toothpaste — to support dental health.</li>
+                  <li>Use grooming time to check for lumps, ticks, fleas, or skin irritation, and make it a calm, positive experience.</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <!-- 3) Exercise -->
+          <div class="card">
+            <h2>
+              <button class="acc-header" id="acc-exercise-btn" aria-expanded="false" aria-controls="acc-exercise-panel">
+                <span class="acc-emoji" aria-hidden="true">🎾</span>
+                <span class="acc-title">Exercise</span>
+                <span class="acc-chevron" aria-hidden="true">▾</span>
+              </button>
+            </h2>
+            <div class="acc-panel" id="acc-exercise-panel" role="region" aria-labelledby="acc-exercise-btn">
+              <div class="acc-panel-inner">
+                <ul>
+                  <li>Aim for daily activity, tailored to breed, age, and health — many dogs thrive on roughly 30 minutes to two hours of movement a day.</li>
+                  <li>Mix it up with walks, fetch, and sniff-friendly exploring; dogs love using their noses.</li>
+                  <li>Add mental enrichment like puzzle toys, training games, and chew toys to prevent boredom.</li>
+                  <li>Be mindful in hot weather: walk during cooler hours, bring water, and watch for overheating; avoid hot pavement that can burn paws.</li>
+                  <li>Ease puppies and senior dogs into exercise gently, and avoid high-impact activity on growing joints.</li>
+                  <li>Watch for signs of overexertion such as heavy panting, lagging behind, or limping, and rest when needed.</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <!-- 4) Health basics -->
+          <div class="card">
+            <h2>
+              <button class="acc-header" id="acc-health-btn" aria-expanded="false" aria-controls="acc-health-panel">
+                <span class="acc-emoji" aria-hidden="true">❤️</span>
+                <span class="acc-title">Health basics</span>
+                <span class="acc-chevron" aria-hidden="true">▾</span>
+              </button>
+            </h2>
+            <div class="acc-panel" id="acc-health-panel" role="region" aria-labelledby="acc-health-btn">
+              <div class="acc-panel-inner">
+                <ul>
+                  <li>Schedule regular veterinary checkups and keep vaccinations and parasite prevention (fleas, ticks, heartworm) up to date.</li>
+                  <li>Talk with your vet about spaying or neutering and about microchipping for safe identification.</li>
+                  <li>Keep your dog at a healthy weight — you should be able to feel the ribs without pressing hard — to protect joints and organs.</li>
+                  <li>Watch for warning signs like changes in appetite, energy, drinking, bathroom habits, or unexplained lumps, and call your vet if they persist.</li>
+                  <li>Know basic emergency signs (difficulty breathing, repeated vomiting, collapse, suspected poisoning) and have your vet and a poison-control number handy.</li>
+                  <li>Don't forget emotional health: companionship, routine, gentle training, and play all keep your dog content.</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <aside class="vet-note" role="note">
+          <span class="vet-emoji" aria-hidden="true">🩺</span>
+          <p>These tips are friendly general guidance, not medical advice. Every dog is unique, so please consult a licensed veterinarian for advice tailored to your pup's age, breed, and health — especially if something seems off.</p>
+        </aside>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <span class="footer-brand">🐾 RealAndPaws</span>
+      <nav class="footer-nav" aria-label="Footer">
+        <ul>
+          <li><a href="index.html">Home</a></li>
+          <li><a href="breeds.html">Breeds</a></li>
+          <li><a href="trivia.html">Trivia</a></li>
+          <li><a href="care.html">Care Tips</a></li>
+        </ul>
+      </nav>
+      <p class="footer-note">&copy; <span id="year">2026</span> RealAndPaws · Real love. Real paws. 🐾</p>
+    </div>
+  </footer>
+
+  <script src="script.js" defer></script>
+  <script>
+    // Page-scoped accordion (runs after shared script.js)
+    (function () {
+      var accordion = document.getElementById('careAccordion');
+      if (!accordion) return;
+
+      var headers = Array.prototype.slice.call(
+        accordion.querySelectorAll('.acc-header')
+      );
+
+      function setOpen(btn, open) {
+        var panel = document.getElementById(btn.getAttribute('aria-controls'));
+        btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+        if (!panel) return;
+        if (open) {
+          panel.style.maxHeight = panel.scrollHeight + 'px';
+          panel.removeAttribute('aria-hidden');
+          panel.removeAttribute('inert');
+        } else {
+          panel.style.maxHeight = '0px';
+          panel.setAttribute('aria-hidden', 'true');
+          panel.setAttribute('inert', '');
+        }
+      }
+
+      // Initialize panels based on their starting aria-expanded state.
+      headers.forEach(function (btn) {
+        var open = btn.getAttribute('aria-expanded') === 'true';
+        setOpen(btn, open);
+
+        btn.addEventListener('click', function () {
+          var isOpen = btn.getAttribute('aria-expanded') === 'true';
+          setOpen(btn, !isOpen);
+        });
+      });
+
+      // Keep open panels sized correctly when the viewport changes (reflow).
+      window.addEventListener('resize', function () {
+        headers.forEach(function (btn) {
+          if (btn.getAttribute('aria-expanded') === 'true') {
+            var panel = document.getElementById(btn.getAttribute('aria-controls'));
+            if (panel) {
+              panel.style.maxHeight = 'none';
+              var h = panel.scrollHeight;
+              panel.style.maxHeight = h + 'px';
+            }
+          }
+        });
+      });
+
+      // Roving keyboard support: Up/Down/Home/End between headers.
+      accordion.addEventListener('keydown', function (e) {
+        var idx = headers.indexOf(document.activeElement);
+        if (idx === -1) return;
+        var next = null;
+        switch (e.key) {
+          case 'ArrowDown': next = headers[(idx + 1) % headers.length]; break;
+          case 'ArrowUp':   next = headers[(idx - 1 + headers.length) % headers.length]; break;
+          case 'Home':      next = headers[0]; break;
+          case 'End':       next = headers[headers.length - 1]; break;
+          default: return;
+        }
+        if (next) { e.preventDefault(); next.focus(); }
+      });
+    })();
+  </script>
+</body>
+</html>
