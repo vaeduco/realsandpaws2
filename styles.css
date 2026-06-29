@@ -364,3 +364,126 @@ a.card:hover { text-decoration: none; }
 
   .site-header .header-inner { position: relative; }
 }
+
+/* ---------- Dog Quiz: floating button + modal ---------- */
+.quiz-fab {
+  position: fixed;
+  right: clamp(16px, 4vw, 28px);
+  bottom: clamp(16px, 4vw, 28px);
+  z-index: 900;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.85rem 1.3rem;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: var(--primary-deep);
+  color: var(--white);
+  font-family: var(--font-head);
+  font-weight: 800;
+  font-size: 1.05rem;
+  cursor: pointer;
+  box-shadow: 0 8px 22px rgba(91, 58, 33, 0.28);
+  transition: transform 0.15s ease, background-color 0.18s ease, box-shadow 0.18s ease;
+}
+.quiz-fab:hover { background: var(--primary-dark); transform: translateY(-2px); box-shadow: var(--shadow-lift); }
+.quiz-fab .quiz-fab-icon { font-size: 1.2rem; line-height: 1; }
+
+.quiz-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(12px, 4vw, 28px);
+  background: rgba(58, 42, 28, 0.55);
+  -webkit-backdrop-filter: blur(3px);
+  backdrop-filter: blur(3px);
+}
+.quiz-overlay[hidden] { display: none; }
+
+.quiz-modal {
+  background: var(--cream);
+  width: min(560px, 100%);
+  max-height: min(90vh, 760px);
+  border-radius: var(--radius);
+  box-shadow: 0 24px 60px rgba(58, 42, 28, 0.40);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.quiz-head {
+  position: relative;
+  padding: 1.3rem 3.2rem 1.1rem 1.5rem;
+  background: linear-gradient(160deg, var(--peach), var(--sand));
+  border-bottom: 1px solid var(--peach);
+}
+.quiz-head h2 { margin: 0; font-size: 1.5rem; }
+.quiz-head p { margin: 0.25rem 0 0; color: var(--brown); font-weight: 700; font-size: 0.95rem; }
+.quiz-close {
+  position: absolute;
+  top: 0.8rem;
+  right: 0.8rem;
+  width: 40px;
+  height: 40px;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.7);
+  color: var(--brown);
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.15s ease;
+}
+.quiz-close:hover { background: #fff; }
+
+.quiz-body { padding: 1.3rem 1.5rem; overflow-y: auto; flex: 1; }
+
+.quiz-notice { color: var(--primary-dark); font-weight: 800; margin: 0 0 1rem; }
+.quiz-notice:empty { margin: 0; }
+
+.quiz-q { border: 0; margin: 0 0 1.4rem; padding: 0; }
+.quiz-q legend {
+  font-family: var(--font-head);
+  font-weight: 700;
+  color: var(--brown);
+  font-size: 1.08rem;
+  margin-bottom: 0.6rem;
+  padding: 0;
+}
+.quiz-choices { display: flex; flex-direction: column; gap: 0.5rem; }
+.quiz-choice {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.7rem 0.9rem;
+  border: 2px solid var(--sand);
+  border-radius: 12px;
+  background: var(--white);
+  cursor: pointer;
+  font-weight: 700;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+.quiz-choice:hover { border-color: var(--accent); }
+.quiz-choice input { accent-color: var(--primary-deep); width: 18px; height: 18px; flex: 0 0 auto; margin: 0; }
+.quiz-choice.is-selected { border-color: var(--primary); background: var(--peach); }
+
+.quiz-foot { padding: 1rem 1.5rem; border-top: 1px solid var(--sand); background: var(--white); }
+.quiz-foot[hidden] { display: none; }
+.quiz-foot .btn { width: 100%; }
+
+.quiz-result { text-align: center; padding: 1.2rem 0 0.5rem; }
+.quiz-result-emoji { font-size: 3.4rem; line-height: 1; margin-bottom: 0.4rem; }
+.quiz-result-msg { font-size: 1.7rem; margin: 0 0 0.3rem; }
+.quiz-result.is-pass .quiz-result-msg { color: #2F7D32; }
+.quiz-result.is-fail .quiz-result-msg { color: var(--primary-dark); }
+.quiz-result-score { color: var(--text); font-size: 1.1rem; margin: 0 0 1.5rem; }
+.quiz-result-actions { display: flex; flex-wrap: wrap; gap: 0.7rem; justify-content: center; }
+
+@media (prefers-reduced-motion: reduce) {
+  .quiz-fab { transition: none; }
+}
