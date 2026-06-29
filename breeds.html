@@ -77,6 +77,15 @@
       padding: 0.4rem 0.75rem;
       border-radius: var(--radius-pill);
     }
+
+    /* Photo attribution note */
+    .photo-credit {
+      text-align: center;
+      color: var(--muted);
+      font-size: 0.9rem;
+      max-width: 640px;
+      margin: 2.4rem auto 0;
+    }
   </style>
 </head>
 <body>
@@ -396,8 +405,8 @@
             </div>
           </article>
 
-          <!-- Cane Corso (no photo available from the Dog CEO API — shows the graceful placeholder) -->
-          <article class="card breed-card">
+          <!-- Cane Corso (not in the Dog CEO API — uses a bundled CC BY-SA image; credit below) -->
+          <article class="card breed-card" data-img="images/cane-corso.jpg">
             <div class="breed-photo">
               <img loading="lazy" alt="A Cane Corso" data-breed-name="Cane Corso">
             </div>
@@ -413,6 +422,12 @@
             </div>
           </article>
         </div>
+
+        <p class="photo-credit">
+          Most breed photos load live from the <a href="https://dog.ceo" target="_blank" rel="noopener">Dog CEO API</a>.
+          Cane Corso photo by <a href="https://commons.wikimedia.org/wiki/File:Italian_Corso_Dog_grey_male_1.jpg" target="_blank" rel="noopener">Canarian</a>,
+          <a href="https://creativecommons.org/licenses/by-sa/4.0/" target="_blank" rel="noopener">CC BY-SA 4.0</a>, via Wikimedia Commons.
+        </p>
       </div>
     </section>
   </main>
@@ -443,7 +458,7 @@
         const slug = card.getAttribute('data-breed');
         const photo = card.querySelector('.breed-photo');
         const img = card.querySelector('img');
-        if (!slug || !img || !photo) return;
+        if (!img || !photo) return;
 
         // If the image errors out for any reason, fall back to the placeholder.
         img.addEventListener('error', function () {
@@ -457,6 +472,14 @@
             photo.classList.add('is-loaded');
           }
         });
+
+        // Some breeds aren't in the Dog CEO API — load a bundled local image instead.
+        const staticSrc = card.getAttribute('data-img');
+        if (staticSrc) {
+          img.src = staticSrc;
+          return;
+        }
+        if (!slug) return;
 
         fetch('https://dog.ceo/api/breed/' + slug + '/images/random')
           .then(function (res) {
