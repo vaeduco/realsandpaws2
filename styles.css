@@ -340,8 +340,8 @@ a.card:hover { text-decoration: none; }
 .text-center { text-align: center; }
 .mt-2 { margin-top: 2rem; }
 
-/* ---------- Responsive: mobile nav (<=720px) ---------- */
-@media (max-width: 720px) {
+/* ---------- Responsive: mobile nav (<=860px) ---------- */
+@media (max-width: 860px) {
   .nav-toggle { display: inline-flex; }
 
   .nav {
@@ -486,4 +486,106 @@ a.card:hover { text-decoration: none; }
 
 @media (prefers-reduced-motion: reduce) {
   .quiz-fab { transition: none; }
+}
+
+/* ---------- Breed search (in the nav) ---------- */
+.nav-search { display: flex; align-items: center; position: relative; }
+.search-form { position: relative; display: flex; align-items: center; width: 100%; }
+.search-input {
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 0.95rem;
+  width: 180px;
+  max-width: 100%;
+  padding: 0.5rem 2.3rem 0.5rem 0.95rem;
+  border: 2px solid var(--sand);
+  border-radius: var(--radius-pill);
+  background: var(--white);
+  color: var(--text);
+}
+.search-input::placeholder { color: var(--muted); }
+.search-input:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(232, 132, 60, 0.22);
+}
+.search-btn {
+  position: absolute;
+  right: 5px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 30px;
+  height: 30px;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--primary-dark);
+  font-size: 0.95rem;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.15s ease;
+}
+.search-btn:hover { background: var(--peach); }
+.search-suggest {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  margin: 0;
+  padding: 0.35rem;
+  list-style: none;
+  background: var(--white);
+  border: 1px solid var(--sand);
+  border-radius: 12px;
+  box-shadow: var(--shadow);
+  z-index: 20;
+  max-height: 280px;
+  overflow-y: auto;
+}
+.search-suggest[hidden] { display: none; }
+.search-suggest-item {
+  padding: 0.55rem 0.7rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 700;
+  color: var(--text);
+  font-size: 0.95rem;
+}
+.search-suggest-item:hover,
+.search-suggest-item.active { background: var(--peach); color: var(--primary-dark); }
+.search-suggest-item mark { background: transparent; color: var(--primary-dark); font-weight: 800; }
+
+/* Breeds page: results bar + matched-card highlight */
+.breed-search-status {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.8rem;
+  flex-wrap: wrap;
+  margin: 0 0 1.6rem;
+  padding: 0.7rem 1.1rem;
+  background: var(--sand);
+  border-radius: 12px;
+  color: var(--brown);
+  font-weight: 700;
+}
+.breed-search-status[hidden] { display: none; }
+.breed-search-clear {
+  border: 0;
+  background: var(--primary-deep);
+  color: var(--white);
+  font-family: var(--font-body);
+  font-weight: 800;
+  padding: 0.45rem 1rem;
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+}
+.breed-search-clear:hover { background: var(--primary-dark); }
+.breed-card.breed-hit { outline: 3px solid var(--primary); outline-offset: 3px; }
+
+@media (max-width: 860px) {
+  .nav-search { width: 100%; margin-bottom: 0.3rem; }
+  .nav-search .search-input { width: 100%; }
 }

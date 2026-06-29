@@ -273,3 +273,168 @@
     else closeQuiz();
   });
 })();
+
+/* ---------- Breed search box in the nav (loads on every page) ---------- */
+(function () {
+  "use strict";
+
+  var navList = document.querySelector(".nav ul");
+  if (!navList || document.querySelector(".nav-search")) return;
+
+  // The breeds shown on breeds.html — drives the type-ahead suggestions.
+  var BREEDS = [
+    "Labrador Retriever", "German Shepherd", "Golden Retriever", "French Bulldog",
+    "Beagle", "Poodle", "Pug", "Siberian Husky", "Dachshund", "Boxer",
+    "Pomeranian", "Rottweiler", "Belgian Malinois", "Shiba Inu",
+    "Doberman Pinscher", "Miniature Pinscher", "Great Dane", "Cane Corso"
+  ];
+
+  function esc(s) {
+    var d = document.createElement("div");
+    d.textContent = s == null ? "" : String(s);
+    return d.innerHTML;
+  }
+
+  // Build the search box and place it to the LEFT of the Home link.
+  var li = document.createElement("li");
+  li.className = "nav-search";
+  li.innerHTML =
+    '<form class="search-form" role="search" autocomplete="off">' +
+      '<input type="search" class="search-input" name="q" placeholder="Search breeds" ' +
+        'aria-label="Search breeds" enterkeyhint="search" aria-autocomplete="list" aria-expanded="false">' +
+      '<button type="submit" class="search-btn" aria-label="Search breeds"><span aria-hidden="true">🔍</span></button>' +
+      '<ul class="search-suggest" role="listbox" aria-label="Breed suggestions" hidden></ul>' +
+    '</form>';
+  navList.insertBefore(li, navList.firstChild);
+
+  var form = li.querySelector(".search-form");
+  var input = li.querySelector(".search-input");
+  var suggest = li.querySelector(".search-suggest");
+  var grid = document.getElementById("breed-grid");
+  var statusBar = null;
+  var active = -1;
+
+  function matches(q) {
+    q = q.trim().toLowerCase();
+    if (!q) return [];
+    return BREEDS.filter(function (b) { return b.toLowerCase().indexOf(q) !== -1; });
+  }
+
+  function mark(text, q) {
+    q = q.trim();
+    var i = q ? text.toLowerCase().indexOf(q.toLowerCase()) : -1;
+    if (i === -1) return esc(text);
+    return esc(text.slice(0, i)) + "<mark>" + esc(text.slice(i, i + q.length)) + "</mark>" + esc(text.slice(i + q.length));
+  }
+
+  function closeSuggest() {
+    suggest.hidden = true;
+    suggest.innerHTML = "";
+    active = -1;
+    input.setAttribute("aria-expanded", "false");
+  }
+
+  function renderSuggest() {
+    var list = matches(input.value).slice(0, 6);
+    active = -1;
+    if (!list.length) { closeSuggest(); return; }
+    suggest.innerHTML = list.map(function (b) {
+      return '<li role="option" class="search-suggest-item" data-breed="' + esc(b) + '">' + mark(b, input.value) + "</li>";
+    }).join("");
+    suggest.hidden = false;
+    input.setAttribute("aria-expanded", "true");
+  }
+
+  function go(query) {
+    query = (query || "").trim();
+    if (!query) return;
+    if (grid) { filterBreeds(query); closeSuggest(); input.blur(); }
+    else { window.location.href = "breeds.html?q=" + encodeURIComponent(query); }
+  }
+
+  function ensureStatusBar() {
+    if (statusBar) return statusBar;
+    statusBar = document.createElement("div");
+    statusBar.className = "breed-search-status";
+    statusBar.hidden = true;
+    grid.parentNode.insertBefore(statusBar, grid);
+    return statusBar;
+  }
+
+  function filterBreeds(query) {
+    if (!grid) return;
+    var q = query.trim().toLowerCase();
+    if (!q) { clearFilter(); return; }
+    var cards = grid.querySelectorAll(".breed-card");
+    var shown = 0, first = null;
+    Array.prototype.forEach.call(cards, function (card) {
+      var h = card.querySelector("h3");
+      var name = h ? h.textContent.toLowerCase() : "";
+      var hit = name.indexOf(q) !== -1;
+      card.style.display = hit ? "" : "none";
+      card.classList.toggle("breed-hit", hit);
+      if (hit) { shown++; if (!first) first = card; }
+    });
+    var bar = ensureStatusBar();
+    bar.hidden = false;
+    bar.innerHTML = (shown
+      ? "<span>Showing <strong>" + shown + "</strong> result" + (shown === 1 ? "" : "s") + " for &ldquo;" + esc(query) + "&rdquo;</span>"
+      : "<span>No breeds match &ldquo;" + esc(query) + "&rdquo;</span>") +
+      '<button type="button" class="breed-search-clear">Show all</button>';
+    if (first) first.scrollIntoView({ behavior: "smooth", block: "center" });
+  }
+
+  function clearFilter() {
+    if (!grid) return;
+    var cards = grid.querySelectorAll(".breed-card");
+    Array.prototype.forEach.call(cards, function (card) {
+      card.style.display = "";
+      card.classList.remove("breed-hit");
+    });
+    if (statusBar) { statusBar.hidden = true; statusBar.innerHTML = ""; }
+    input.value = "";
+    if (window.history && history.replaceState) history.replaceState(null, "", location.pathname);
+  }
+
+  function updateActive(items) {
+    Array.prototype.forEach.call(items, function (it, i) { it.classList.toggle("active", i === active); });
+    if (active > -1) items[active].scrollIntoView({ block: "nearest" });
+  }
+
+  input.addEventListener("input", renderSuggest);
+  input.addEventListener("focus", function () { if (input.value.trim()) renderSuggest(); });
+
+  input.addEventListener("keydown", function (e) {
+    var items = suggest.hidden ? [] : suggest.querySelectorAll(".search-suggest-item");
+    if (e.key === "ArrowDown" && items.length) { e.preventDefault(); active = (active + 1) % items.length; updateActive(items); }
+    else if (e.key === "ArrowUp" && items.length) { e.preventDefault(); active = (active - 1 + items.length) % items.length; updateActive(items); }
+    else if (e.key === "Escape") { closeSuggest(); }
+    else if (e.key === "Enter" && active > -1 && items[active]) {
+      e.preventDefault();
+      input.value = items[active].getAttribute("data-breed");
+      go(input.value);
+    }
+  });
+
+  // mousedown (not click) so it runs before the input loses focus
+  suggest.addEventListener("mousedown", function (e) {
+    var it = e.target.closest(".search-suggest-item");
+    if (!it) return;
+    e.preventDefault();
+    input.value = it.getAttribute("data-breed");
+    go(input.value);
+  });
+
+  form.addEventListener("submit", function (e) { e.preventDefault(); go(input.value); });
+
+  document.addEventListener("click", function (e) {
+    if (e.target.classList && e.target.classList.contains("breed-search-clear")) { clearFilter(); return; }
+    if (!li.contains(e.target)) closeSuggest();
+  });
+
+  // On the breeds page, apply any ?q= passed from another page.
+  if (grid) {
+    var q0 = new URLSearchParams(window.location.search).get("q");
+    if (q0) { input.value = q0; filterBreeds(q0); }
+  }
+})();
