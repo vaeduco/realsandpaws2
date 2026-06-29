@@ -14,7 +14,7 @@
     /* Page-scoped: dog age calculator */
     .calc-card { max-width: 560px; margin-inline: auto; }
     .calc-form { display: flex; flex-wrap: wrap; gap: 1rem; align-items: flex-end; }
-    .calc-field { flex: 1 1 160px; display: flex; flex-direction: column; }
+    .calc-field { flex: 1 1 200px; display: flex; flex-direction: column; }
     .calc-field label { font-weight: 800; color: var(--brown); margin-bottom: 0.4rem; font-size: 0.95rem; }
     .calc-field input, .calc-field select {
       font-family: var(--font-body); font-size: 1rem;
@@ -28,8 +28,13 @@
     .calc-result[hidden] { display: none; }
     .calc-result-num { font-family: var(--font-head); font-weight: 800; font-size: 1.7rem; color: var(--primary-dark); margin: 0 0 0.3rem; }
     .calc-result-num strong { color: var(--primary-deep); }
-    .calc-result-note { color: var(--muted); margin: 0; }
+    .calc-result-note { color: var(--text); margin: 0; }
+    .calc-result-sub { color: var(--muted); font-size: 0.9rem; margin: 0.4rem 0 0; }
     .calc-result.is-error { color: #B23B2E; font-weight: 700; }
+    .calc-age-row, .calc-weight-row { display: flex; gap: 0.5rem; }
+    .calc-field .calc-age-row input, .calc-field .calc-weight-row input { flex: 1 1 auto; min-width: 0; width: auto; }
+    .calc-field .calc-age-row select, .calc-field .calc-weight-row select { flex: 0 0 auto; width: auto; }
+    .calc-btn { flex: 1 1 100%; }
     @media (max-width: 480px) {
       .calc-field { flex: 1 1 100%; }
       .calc-btn { flex: 1 1 100%; width: 100%; }
@@ -105,16 +110,48 @@
         <div class="card calc-card">
           <form id="age-form" class="calc-form">
             <div class="calc-field">
-              <label for="dog-age">Dog's age (years)</label>
-              <input type="number" id="dog-age" min="0" max="30" step="0.5" inputmode="decimal" placeholder="e.g. 3">
+              <label for="dog-age">Dog's age</label>
+              <div class="calc-age-row">
+                <input type="number" id="dog-age" min="0" step="0.5" inputmode="decimal" placeholder="e.g. 3">
+                <select id="age-unit" aria-label="Age unit">
+                  <option value="years" selected>Years</option>
+                  <option value="months">Months</option>
+                </select>
+              </div>
             </div>
             <div class="calc-field">
-              <label for="dog-size">Size</label>
-              <select id="dog-size">
-                <option value="small">Small (under 20 lbs)</option>
-                <option value="medium" selected>Medium (20–50 lbs)</option>
-                <option value="large">Large (over 50 lbs)</option>
+              <label for="dog-breed">Breed</label>
+              <select id="dog-breed">
+                <option value="Labrador Retriever">Labrador Retriever</option>
+                <option value="German Shepherd">German Shepherd</option>
+                <option value="Golden Retriever">Golden Retriever</option>
+                <option value="French Bulldog">French Bulldog</option>
+                <option value="Beagle">Beagle</option>
+                <option value="Poodle">Poodle</option>
+                <option value="Pug">Pug</option>
+                <option value="Siberian Husky">Siberian Husky</option>
+                <option value="Dachshund">Dachshund</option>
+                <option value="Boxer">Boxer</option>
+                <option value="Pomeranian">Pomeranian</option>
+                <option value="Rottweiler">Rottweiler</option>
+                <option value="Belgian Malinois">Belgian Malinois</option>
+                <option value="Shiba Inu">Shiba Inu</option>
+                <option value="Doberman Pinscher">Doberman Pinscher</option>
+                <option value="Miniature Pinscher">Miniature Pinscher</option>
+                <option value="Great Dane">Great Dane</option>
+                <option value="Cane Corso">Cane Corso</option>
+                <option value="mixed">Mixed / Other breed</option>
               </select>
+            </div>
+            <div class="calc-field">
+              <label for="dog-weight">Weight</label>
+              <div class="calc-weight-row">
+                <input type="number" id="dog-weight" min="0" step="0.1" inputmode="decimal" placeholder="e.g. 30">
+                <select id="weight-unit" aria-label="Weight unit">
+                  <option value="lbs" selected>lbs</option>
+                  <option value="kg">kg</option>
+                </select>
+              </div>
             </div>
             <button type="submit" class="btn btn-primary calc-btn">Calculate</button>
           </form>
@@ -164,7 +201,10 @@
       var form = document.getElementById("age-form");
       if (!form) return;
       var ageInput = document.getElementById("dog-age");
-      var sizeSel = document.getElementById("dog-size");
+      var ageUnit = document.getElementById("age-unit");
+      var breedSel = document.getElementById("dog-breed");
+      var weightInput = document.getElementById("dog-weight");
+      var weightUnit = document.getElementById("weight-unit");
       var result = document.getElementById("calc-result");
 
       // Standard size-based rule of thumb: year 1 is about 15 human years,
@@ -177,25 +217,42 @@
         return Math.round(24 + (age - 2) * perYear);
       }
 
+      // Weight drives the aging rate (thresholds in lbs).
+      function sizeFromLbs(lbs) {
+        if (lbs < 20) return "small";
+        if (lbs <= 50) return "medium";
+        return "large";
+      }
+
+      function showError(msg) {
+        result.hidden = false;
+        result.className = "calc-result is-error";
+        result.textContent = msg;
+      }
+
       form.addEventListener("submit", function (e) {
         e.preventDefault();
-        var age = parseFloat(ageInput.value);
-        if (isNaN(age) || age < 0) {
-          result.hidden = false;
-          result.className = "calc-result is-error";
-          result.textContent = "Please enter your dog's age in years.";
-          return;
-        }
-        if (age > 30) age = 30;
-        var size = sizeSel.value;
-        var sizeLabel = { small: "small", medium: "medium-sized", large: "large" }[size] || "";
-        var human = dogToHuman(age, size);
-        var ageText = age % 1 === 0 ? String(age) : age.toFixed(1);
+        var ageVal = parseFloat(ageInput.value);
+        if (isNaN(ageVal) || ageVal < 0) { showError("Please enter your dog's age."); return; }
+        var weightVal = parseFloat(weightInput.value);
+        if (isNaN(weightVal) || weightVal <= 0) { showError("Please enter your dog's weight so we can pick the right aging rate."); return; }
+
+        var ageYears = ageUnit.value === "months" ? ageVal / 12 : ageVal;
+        if (ageYears > 30) ageYears = 30;
+        var lbs = weightUnit.value === "kg" ? weightVal * 2.20462 : weightVal;
+        var size = sizeFromLbs(lbs);
+        var human = dogToHuman(ageYears, size);
+
+        var breed = breedSel.value;
+        var subject = breed === "mixed" ? "Your mixed-breed pup" : "Your " + breed;
+        var sizeWord = { small: "small", medium: "medium-size", large: "large" }[size];
+
         result.className = "calc-result";
         result.hidden = false;
         result.innerHTML =
           '<p class="calc-result-num"><strong>≈ ' + human + '</strong> human years</p>' +
-          '<p class="calc-result-note">A ' + ageText + '-year-old ' + sizeLabel + ' dog is roughly ' + human + ' in human years.</p>';
+          '<p class="calc-result-note">' + subject + ' is roughly ' + human + ' in human years.</p>' +
+          '<p class="calc-result-sub">Based on the weight you entered, we used the ' + sizeWord + '-dog aging rate.</p>';
       });
     })();
   </script>
