@@ -117,7 +117,7 @@ button:focus-visible,
 
 /* Nav */
 .nav { display: flex; align-items: center; }
-.nav ul {
+.nav > ul {
   list-style: none;
   display: flex;
   flex-wrap: wrap;
@@ -356,7 +356,7 @@ a.card:hover { text-decoration: none; }
     display: none;
   }
   .nav.open { display: block; }
-  .nav ul {
+  .nav > ul {
     flex-direction: column;
     gap: 0.2rem;
     padding: 0.6rem var(--container-pad) 1rem;
@@ -530,6 +530,7 @@ a.card:hover { text-decoration: none; }
 }
 .search-btn:hover { background: var(--peach); }
 .search-suggest {
+  display: block;
   position: absolute;
   top: calc(100% + 6px);
   left: 0;
