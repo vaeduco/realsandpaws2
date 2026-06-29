@@ -313,6 +313,9 @@
   var grid = document.getElementById("breed-grid");
   var statusBar = null;
   var active = -1;
+  var INITIAL = 9, STEP = 3, visibleCount = INITIAL;
+  var allCards = grid ? grid.querySelectorAll(".breed-card") : [];
+  var moreWrap = null, moreBtn = null, endMsg = null;
 
   function matches(q) {
     q = q.trim().toLowerCase();
@@ -365,9 +368,8 @@
     if (!grid) return;
     var q = query.trim().toLowerCase();
     if (!q) { clearFilter(); return; }
-    var cards = grid.querySelectorAll(".breed-card");
     var shown = 0, first = null;
-    Array.prototype.forEach.call(cards, function (card) {
+    Array.prototype.forEach.call(allCards, function (card) {
       var h = card.querySelector("h3");
       var name = h ? h.textContent.toLowerCase() : "";
       var hit = name.indexOf(q) !== -1;
@@ -375,6 +377,7 @@
       card.classList.toggle("breed-hit", hit);
       if (hit) { shown++; if (!first) first = card; }
     });
+    if (moreWrap) moreWrap.style.display = "none"; // search overrides the pager
     var bar = ensureStatusBar();
     bar.hidden = false;
     bar.innerHTML = (shown
@@ -386,14 +389,47 @@
 
   function clearFilter() {
     if (!grid) return;
-    var cards = grid.querySelectorAll(".breed-card");
-    Array.prototype.forEach.call(cards, function (card) {
-      card.style.display = "";
-      card.classList.remove("breed-hit");
-    });
     if (statusBar) { statusBar.hidden = true; statusBar.innerHTML = ""; }
     input.value = "";
     if (window.history && history.replaceState) history.replaceState(null, "", location.pathname);
+    applyView();
+  }
+
+  // "See more" pager: show 9 breeds by default, reveal STEP more per click.
+  function applyView() {
+    if (!grid) return;
+    Array.prototype.forEach.call(allCards, function (card, i) {
+      card.style.display = i < visibleCount ? "" : "none";
+      card.classList.remove("breed-hit");
+    });
+    if (moreWrap) {
+      moreWrap.style.display = "";
+      var done = visibleCount >= allCards.length;
+      moreBtn.style.display = done ? "none" : "";
+      endMsg.hidden = !done;
+    }
+  }
+
+  function setupSeeMore() {
+    if (!grid || moreWrap || allCards.length <= INITIAL) return;
+    moreWrap = document.createElement("div");
+    moreWrap.className = "see-more-wrap";
+    moreBtn = document.createElement("button");
+    moreBtn.type = "button";
+    moreBtn.className = "btn btn-primary see-more-btn";
+    moreBtn.textContent = "See more";
+    endMsg = document.createElement("p");
+    endMsg.className = "breeds-end";
+    endMsg.setAttribute("role", "status");
+    endMsg.textContent = "No more breeds to show.";
+    endMsg.hidden = true;
+    moreWrap.appendChild(moreBtn);
+    moreWrap.appendChild(endMsg);
+    grid.parentNode.insertBefore(moreWrap, grid.nextSibling);
+    moreBtn.addEventListener("click", function () {
+      visibleCount = Math.min(allCards.length, visibleCount + STEP);
+      applyView();
+    });
   }
 
   function updateActive(items) {
@@ -432,9 +468,11 @@
     if (!li.contains(e.target)) closeSuggest();
   });
 
-  // On the breeds page, apply any ?q= passed from another page.
+  // On the breeds page: set up the pager, then apply any ?q= passed from another page.
   if (grid) {
+    setupSeeMore();
     var q0 = new URLSearchParams(window.location.search).get("q");
     if (q0) { input.value = q0; filterBreeds(q0); }
+    else { applyView(); }
   }
 })();
