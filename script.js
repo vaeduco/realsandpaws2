@@ -34,11 +34,12 @@
   }
 })();
 
-/* ---------- Dog Quiz: floating "Quiz" button + modal (loads on every page) ---------- */
+/* ---------- Dog Quiz: modal opened by any [data-quiz-open] trigger ---------- */
 (function () {
   "use strict";
 
-  if (document.querySelector(".quiz-fab")) return; // never inject twice
+  var triggers = document.querySelectorAll("[data-quiz-open]");
+  if (!triggers.length) return; // only build the quiz on pages that have a trigger
 
   var COUNT = 10;   // questions per round
   var PASS = 6;     // passing score
@@ -107,14 +108,7 @@
     return d.innerHTML;
   }
 
-  // Build the floating button + modal shell once.
-  var fab = document.createElement("button");
-  fab.type = "button";
-  fab.className = "quiz-fab";
-  fab.setAttribute("aria-haspopup", "dialog");
-  fab.setAttribute("aria-controls", "quiz-modal");
-  fab.innerHTML = '<span class="quiz-fab-icon" aria-hidden="true">🐾</span> Quiz';
-
+  // Build the modal shell once.
   var overlay = document.createElement("div");
   overlay.className = "quiz-overlay";
   overlay.hidden = true;
@@ -137,7 +131,6 @@
       '</div>' +
     '</div>';
 
-  document.body.appendChild(fab);
   document.body.appendChild(overlay);
 
   var modal = overlay.querySelector(".quiz-modal");
@@ -262,7 +255,7 @@
     notice.textContent = "";
   });
 
-  fab.addEventListener("click", openQuiz);
+  Array.prototype.forEach.call(triggers, function (t) { t.addEventListener("click", openQuiz); });
   closeBtn.addEventListener("click", closeQuiz);
   submitBtn.addEventListener("click", onSubmit);
   overlay.addEventListener("click", function (e) { if (e.target === overlay) closeQuiz(); });
