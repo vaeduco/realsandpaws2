@@ -82,7 +82,6 @@
         <p class="lead">Dogs are full of delightful surprises. Dig into a fresh batch of true, family-friendly facts — perfect for impressing friends, settling debates, or just grinning at how wonderful our four-legged pals really are.</p>
         <div class="hero-cta">
           <a class="btn btn-primary" href="#random-fact">Surprise me 🦴</a>
-          <a class="btn btn-ghost" href="#fact-grid">See all facts</a>
         </div>
       </div>
     </section>
@@ -97,14 +96,6 @@
           <p class="fact-text" id="spotlight-text" aria-live="polite">Tap the button below to reveal a fun dog fact!</p>
           <button class="btn btn-primary" id="another-fact" type="button">Give me another! 🦴</button>
         </div>
-      </div>
-    </section>
-
-    <section class="section" id="fact-grid" aria-labelledby="fact-grid-title" style="padding-top:0;">
-      <div class="container">
-        <h2 class="section-title" id="fact-grid-title">Pawsome fact pack</h2>
-        <p class="section-sub">A dozen tail-wagging truths about our favorite companions.</p>
-        <div class="grid" id="facts-container"></div>
       </div>
     </section>
 
@@ -160,20 +151,6 @@
         { emoji: "🐕", text: "Dogs have three eyelids, including a third 'nictitating' membrane that helps protect and moisten the eye." },
         { emoji: "❤️", text: "A dog's sense of smell is so keen it can detect some scents in concentrations of parts per trillion." }
       ];
-
-      // Build the fact grid from the same data set.
-      var container = document.getElementById("facts-container");
-      if (container) {
-        var markup = "";
-        for (var i = 0; i < facts.length; i++) {
-          var f = facts[i];
-          markup += '<div class="card fact-card">' +
-                      '<span class="card-icon" aria-hidden="true">' + f.emoji + '</span>' +
-                      '<p>' + f.text + '</p>' +
-                    '</div>';
-        }
-        container.innerHTML = markup;
-      }
 
       // Random fact spotlight with no immediate repeats.
       var emojiEl = document.getElementById("spotlight-emoji");
