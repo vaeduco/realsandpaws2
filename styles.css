@@ -120,6 +120,7 @@ button:focus-visible,
 .nav ul {
   list-style: none;
   display: flex;
+  flex-wrap: wrap;
   gap: 0.35rem;
   margin: 0;
   padding: 0;
@@ -340,8 +341,8 @@ a.card:hover { text-decoration: none; }
 .text-center { text-align: center; }
 .mt-2 { margin-top: 2rem; }
 
-/* ---------- Responsive: mobile nav (<=860px) ---------- */
-@media (max-width: 860px) {
+/* ---------- Responsive: mobile nav (<=1080px) ---------- */
+@media (max-width: 1080px) {
   .nav-toggle { display: inline-flex; }
 
   .nav {
@@ -495,9 +496,9 @@ a.card:hover { text-decoration: none; }
   font-family: var(--font-body);
   font-weight: 600;
   font-size: 0.95rem;
-  width: 180px;
+  width: 420px;
   max-width: 100%;
-  padding: 0.5rem 2.3rem 0.5rem 0.95rem;
+  padding: 0.5rem 0.95rem 0.5rem 2.4rem;
   border: 2px solid var(--sand);
   border-radius: var(--radius-pill);
   background: var(--white);
@@ -511,7 +512,7 @@ a.card:hover { text-decoration: none; }
 }
 .search-btn {
   position: absolute;
-  right: 5px;
+  left: 5px;
   top: 50%;
   transform: translateY(-50%);
   width: 30px;
@@ -585,7 +586,7 @@ a.card:hover { text-decoration: none; }
 .breed-search-clear:hover { background: var(--primary-dark); }
 .breed-card.breed-hit { outline: 3px solid var(--primary); outline-offset: 3px; }
 
-@media (max-width: 860px) {
+@media (max-width: 1080px) {
   .nav-search { width: 100%; margin-bottom: 0.3rem; }
   .nav-search .search-input { width: 100%; }
 }

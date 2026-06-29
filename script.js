@@ -300,7 +300,7 @@
   li.className = "nav-search";
   li.innerHTML =
     '<form class="search-form" role="search" autocomplete="off">' +
-      '<input type="search" class="search-input" name="q" placeholder="Search breeds" ' +
+      '<input type="search" class="search-input" name="q" placeholder="Search Breed" ' +
         'aria-label="Search breeds" enterkeyhint="search" aria-autocomplete="list" aria-expanded="false">' +
       '<button type="submit" class="search-btn" aria-label="Search breeds"><span aria-hidden="true">🔍</span></button>' +
       '<ul class="search-suggest" role="listbox" aria-label="Breed suggestions" hidden></ul>' +
