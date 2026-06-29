@@ -44,7 +44,7 @@ function fmtDate(value) {
 }
 
 async function fromGoogleNews() {
-  const q = encodeURIComponent('dog OR puppy OR dogs');
+  const q = encodeURIComponent('dog (adoption OR adopted OR rescue OR rescued OR shelter OR foster OR reunited OR heartwarming OR therapy OR hero OR "good boy" OR "good girl" OR puppy)');
   const url = `https://news.google.com/rss/search?q=${q}&hl=en-US&gl=US&ceid=US:en`;
   const r = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0 (RealAndPaws news bot)' } });
   if (!r.ok) throw new Error('Google News HTTP ' + r.status);
@@ -71,7 +71,7 @@ async function fromGoogleNews() {
 }
 
 async function fromGNews(key) {
-  const url = `https://gnews.io/api/v4/search?q=${encodeURIComponent('dog OR puppy')}&lang=en&country=us&max=10&token=${key}`;
+  const url = `https://gnews.io/api/v4/search?q=${encodeURIComponent('(dog OR puppy) AND (adoption OR rescue OR rescued OR therapy OR shelter OR foster OR reunited OR heartwarming OR hero)')}&lang=en&country=us&max=10&token=${key}`;
   const r = await fetch(url);
   if (!r.ok) throw new Error('GNews HTTP ' + r.status);
   const data = await r.json();
