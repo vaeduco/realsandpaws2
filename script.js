@@ -191,10 +191,12 @@
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ name: name, email: email, phone: phone })
     }).then(function (r) {
-      if (!r.ok) throw new Error("save failed");
-      renderQuiz();
-    }).catch(function () {
-      leadError.textContent = "Sorry, we couldn't save your details. Please try again.";
+      if (r.ok) { renderQuiz(); return; }
+      return r.json().catch(function () { return {}; }).then(function (j) {
+        throw new Error(j.detail || j.error || ("HTTP " + r.status));
+      });
+    }).catch(function (err) {
+      leadError.textContent = "Couldn't save: " + ((err && err.message) || "please try again.");
     }).then(function () {
       leadSubmit.disabled = false;
       leadSubmit.textContent = "Start quiz";

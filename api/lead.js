@@ -7,7 +7,13 @@ const { readJson, supabase, supabaseConfigured } = require("../lib/server");
 
 module.exports = async (req, res) => {
   if (req.method !== "POST") { res.status(405).json({ error: "Method not allowed" }); return; }
-  if (!supabaseConfigured()) { res.status(500).json({ error: "Server not configured." }); return; }
+  if (!supabaseConfigured()) {
+    var missing = [];
+    if (!process.env.SUPABASE_URL) missing.push("SUPABASE_URL");
+    if (!process.env.SUPABASE_SERVICE_ROLE_KEY) missing.push("SUPABASE_SERVICE_ROLE_KEY");
+    res.status(500).json({ error: "Server not configured.", detail: "Missing env var(s): " + missing.join(", ") });
+    return;
+  }
   try {
     var body = await readJson(req);
     var name = String(body.name || "").trim();
@@ -23,9 +29,15 @@ module.exports = async (req, res) => {
       headers: { "Content-Type": "application/json", Prefer: "return=minimal" },
       body: JSON.stringify({ name: name, email: email, phone: phone })
     });
-    if (!r.ok) { res.status(502).json({ error: "Could not save lead." }); return; }
+    if (!r.ok) {
+      var detail = await r.text().catch(function () { return ""; });
+      console.error("lead insert failed:", r.status, detail);
+      res.status(502).json({ error: "Could not save lead.", status: r.status, detail: detail.slice(0, 300) });
+      return;
+    }
     res.status(201).json({ ok: true });
   } catch (e) {
-    res.status(500).json({ error: "Unexpected error." });
+    console.error("lead handler error:", e);
+    res.status(500).json({ error: "Unexpected error.", detail: String((e && e.message) || e) });
   }
 };
