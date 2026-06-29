@@ -38,7 +38,17 @@ Then open <http://localhost:8000> in your browser.
 This is a pure static site — there is **no build command** and **no framework**.
 Vercel serves the directory as-is.
 
-### Option A — Vercel CLI
+### Option A — One-click deploy button
+
+Once this project is on GitHub, deploy it in a single click:
+
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/vaeduco/realsandpaws2)
+
+> The button clones [`vaeduco/realsandpaws2`](https://github.com/vaeduco/realsandpaws2)
+> into the visitor's Vercel account and deploys it as-is, with no extra configuration.
+> Anyone who opens the repo can deploy their own copy the same way.
+
+### Option B — Vercel CLI
 
 ```bash
 npm i -g vercel
@@ -46,9 +56,13 @@ vercel            # deploy a preview
 vercel --prod     # deploy to production
 ```
 
-### Option B — GitHub + vercel.com
+### Option C — GitHub + vercel.com
 
-1. Push this folder to a GitHub repository.
+1. Push this folder to GitHub:
+   ```bash
+   git remote add origin https://github.com/vaeduco/realsandpaws2.git
+   git push -u origin main
+   ```
 2. Go to [vercel.com](https://vercel.com) and import the repo.
 3. Set **Framework Preset** to **Other**.
 4. Leave the **Build Command** empty.
