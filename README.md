@@ -1,11 +1,13 @@
 # RealAndPaws 🐾
 
-RealAndPaws is a simple, friendly static website for dog lovers — browse popular
-breeds, enjoy fun trivia, and pick up practical care tips. It's plain HTML, CSS,
-and JavaScript — no build step, no framework, no dependencies.
+RealAndPaws is a simple, friendly website for dog lovers — browse popular breeds,
+enjoy fun trivia, pick up practical care tips, and catch the latest dog news. It's
+plain HTML, CSS, and JavaScript with no build step or framework; the only moving
+part is one tiny zero-dependency serverless function that powers the news feed.
 
-The breed photos are loaded at runtime from the free [Dog CEO API](https://dog.ceo)
-(`dog.ceo`), so an internet connection is required for images to appear.
+Breed photos load at runtime from the free [Dog CEO API](https://dog.ceo), and the
+News page pulls fresh, tone-filtered headlines server-side — both degrade gracefully
+to built-in content when offline.
 
 ## File structure
 
@@ -15,11 +17,13 @@ realsandpaws2/
 ├── breeds.html      # Popular breeds gallery (photos via the Dog CEO API)
 ├── trivia.html      # Fun dog facts + a random-fact generator
 ├── care.html        # Care tips accordion (feeding, grooming, exercise, health)
-├── news.html        # Dog news feed (sample articles)
+├── news.html        # Dog news feed (live headlines + curated fallback)
 ├── styles.css       # Shared styles for the whole site
 ├── script.js        # Shared JS (mobile nav, active link, footer year)
 ├── favicon.svg      # Site icon
 ├── images/          # Bundled assets (Cane Corso photo)
+├── api/
+│   └── news.js      # Serverless function: tone-filtered dog news (Vercel)
 ├── vercel.json      # Vercel static-hosting config
 ├── README.md        # This file
 └── .gitignore
@@ -37,8 +41,9 @@ Then open <http://localhost:8000> in your browser.
 
 ## Deploy on Vercel
 
-This is a pure static site — there is **no build command** and **no framework**.
-Vercel serves the directory as-is.
+This is a static site with **no build command** and **no framework** — Vercel
+serves the pages as-is and automatically runs the one function in `api/` (see
+[Live news feed](#live-news-feed) below). Nothing to configure.
 
 ### Option A — One-click deploy button
 
@@ -73,3 +78,27 @@ vercel --prod     # deploy to production
 
 Because the breed photos come from `dog.ceo` at runtime, the deployed site needs
 internet access to display images — nothing is bundled or cached server-side.
+
+## Live news feed
+
+The News page calls `GET /api/news`, a small serverless function that runs on
+Vercel. It fetches dog-related stories **server-side** (no CORS issues, no API key
+required) and returns a JSON list filtered for a friendly tone — an item must
+contain a positive signal (adoption, therapy, rescue, dog park, …) and must not
+contain distressing or off-topic ("hot dog") terms.
+
+- **Default (keyless):** uses the free Google News RSS feed — headline, source,
+  and date. No setup needed.
+- **Optional richer feed:** set a `GNEWS_KEY` environment variable in Vercel
+  (free key from [gnews.io](https://gnews.io)) and the function switches to the
+  GNews API, which also returns a real one-line **summary** per story.
+
+If the function is unavailable, or too few wholesome stories are found, the page
+keeps its built-in **curated articles**, so it always looks good.
+
+Tune the feed by editing `api/news.js` — the search query and the `ALLOW` /
+`BLOCK` / `FOOD` regular expressions control what shows up.
+
+**Local note:** `python3 -m http.server` only serves static files, so `/api/news`
+won't run locally and you'll see the curated articles. To exercise the function
+locally, run `vercel dev` instead (requires the Vercel CLI).

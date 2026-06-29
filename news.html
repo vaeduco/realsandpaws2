@@ -12,6 +12,27 @@
   <title>News — RealAndPaws 🐾</title>
   <style>
     /* ---------- Page-scoped: news list ---------- */
+    .news-status { text-align: center; margin: -0.8rem 0 2rem; }
+    .news-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      background: var(--white);
+      border: 1px solid var(--sand);
+      color: var(--muted);
+      font-weight: 800;
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: 0.4rem 0.9rem;
+      border-radius: var(--radius-pill);
+    }
+    .news-badge.is-live { color: var(--primary-dark); border-color: var(--primary); }
+    .news-badge .dot {
+      width: 0.5rem; height: 0.5rem; border-radius: 50%;
+      background: currentColor; display: inline-block;
+    }
+
     .news-list {
       display: flex;
       flex-direction: column;
@@ -39,6 +60,7 @@
       border-radius: var(--radius-pill);
     }
     .news-title { font-size: 1.35rem; margin: 0 0 0.45rem; }
+    .news-title a { color: var(--primary-dark); }
     .news-summary { margin: 0; color: var(--text); }
   </style>
 </head>
@@ -69,8 +91,11 @@
       <div class="container">
         <h1 class="section-title">Dog News</h1>
         <p class="section-sub">The latest tails from the world of dogs — research, rescues, and good-boy headlines worth wagging about.</p>
+        <p class="news-status" id="news-status" aria-live="polite">
+          <span class="news-badge" id="news-badge">✨ Curated picks</span>
+        </p>
 
-        <div class="news-list">
+        <div class="news-list" id="news-list">
 
           <article class="card news-item">
             <div class="news-meta">
@@ -95,8 +120,8 @@
               <span class="news-cat">Health</span>
               <p class="news-date"><time datetime="2026-06-18">June 18, 2026</time></p>
             </div>
-            <h2 class="news-title">Vets Warn of Hot Pavement and Parked-Car Dangers This Summer</h2>
-            <p class="news-summary">Veterinarians are urging owners to walk dogs in the cooler morning and evening hours and never leave them in parked cars, noting that summer asphalt can get hot enough to burn paw pads within seconds.</p>
+            <h2 class="news-title">Vets Share Tips to Keep Dogs Cool and Safe All Summer</h2>
+            <p class="news-summary">Veterinarians recommend walking dogs during the cooler morning and evening hours, always bringing water, and checking that pavement isn't too warm for sensitive paw pads before heading out.</p>
           </article>
 
           <article class="card news-item">
@@ -129,7 +154,7 @@
         </div>
 
         <p class="photo-credit" style="text-align:center;color:var(--muted);font-size:0.9rem;max-width:640px;margin:2.4rem auto 0;">
-          Sample headlines for demonstration — swap in your own stories or wire up a live news feed anytime.
+          When live headlines are available they load automatically; otherwise these curated picks are shown.
         </p>
       </div>
     </section>
@@ -152,5 +177,53 @@
   </footer>
 
   <script src="script.js" defer></script>
+  <script>
+    // Try to load fresh, tone-filtered dog headlines from the /api/news serverless
+    // function. If it's unavailable (e.g. opened as a local file, or a thin news
+    // day with too few wholesome stories) we simply keep the curated articles
+    // already in the page — same graceful-fallback pattern as the breeds gallery.
+    (function () {
+      var list = document.getElementById('news-list');
+      var badge = document.getElementById('news-badge');
+      if (!list) return;
+
+      function esc(value) {
+        var d = document.createElement('div');
+        d.textContent = value == null ? '' : String(value);
+        return d.innerHTML;
+      }
+
+      function renderItem(it) {
+        var meta =
+          (it.source ? '<span class="news-cat">' + esc(it.source) + '</span>' : '') +
+          (it.date ? '<p class="news-date">' + esc(it.date) + '</p>' : '');
+        var title = it.link
+          ? '<a href="' + esc(it.link) + '" target="_blank" rel="noopener">' + esc(it.title) + '</a>'
+          : esc(it.title);
+        var summary = it.summary
+          ? '<p class="news-summary">' + esc(it.summary) + '</p>'
+          : '<p class="news-summary"><a href="' + esc(it.link) + '" target="_blank" rel="noopener">Read the full story on ' +
+              esc(it.source || 'the source') + ' &rarr;</a></p>';
+        return '<article class="card news-item">' +
+                 '<div class="news-meta">' + meta + '</div>' +
+                 '<h2 class="news-title">' + title + '</h2>' +
+                 summary +
+               '</article>';
+      }
+
+      fetch('/api/news', { headers: { 'Accept': 'application/json' } })
+        .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+        .then(function (data) {
+          var items = (data && data.items) || [];
+          if (items.length < 3) return; // keep curated picks
+          list.innerHTML = items.map(renderItem).join('');
+          if (badge) {
+            badge.className = 'news-badge is-live';
+            badge.innerHTML = '<span class="dot" aria-hidden="true"></span> Live headlines';
+          }
+        })
+        .catch(function () { /* keep the curated articles already on the page */ });
+    })();
+  </script>
 </body>
 </html>
