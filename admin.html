@@ -66,8 +66,11 @@
     .admin-table th .arrow { color: var(--primary); font-size: 0.85em; }
     .admin-table td { color: var(--text); }
     .admin-table tbody tr:hover { background: var(--cream); }
-    .admin-empty { color: var(--muted); font-weight: 700; }
-    .admin-loading { color: var(--muted); font-weight: 700; }
+    .admin-empty { color: var(--muted); font-weight: 700; text-align: center; padding: 1.6rem 1rem; font-size: 1.02rem; }
+    .admin-loading { color: var(--muted); font-weight: 700; display: flex; align-items: center; gap: 0.5rem; }
+    .spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid var(--sand); border-top-color: var(--primary); border-radius: 50%; animation: rap-spin 0.7s linear infinite; vertical-align: -3px; }
+    .spinner[hidden] { display: none; }
+    @keyframes rap-spin { to { transform: rotate(360deg); } }
     .admin-controls { display: flex; flex-wrap: wrap; gap: 0.8rem; align-items: center; margin: 0 0 0.9rem; }
     .admin-filter { font-weight: 800; color: var(--brown); font-size: 0.9rem; display: inline-flex; align-items: center; gap: 0.45rem; }
     .admin-filter select { font-family: var(--font-body); font-weight: 700; font-size: 0.9rem; padding: 0.4rem 0.6rem; border: 2px solid var(--sand); border-radius: 10px; background: var(--white); color: var(--text); }
@@ -117,7 +120,7 @@
     <div class="admin-card">
       <h1><span aria-hidden="true">🐾</span> RealAndPaws Admin</h1>
 
-      <p class="admin-loading" id="admin-loading">Loading…</p>
+      <p class="admin-loading" id="admin-loading"><span class="spinner" aria-hidden="true"></span> Loading…</p>
 
       <form class="admin-login" id="login-form" hidden>
         <p class="admin-sub">Sign in to view quiz leads.</p>
@@ -133,7 +136,7 @@
 
       <div id="leads-view" hidden>
         <div class="admin-head">
-          <h2>Quiz leads</h2>
+          <h2>Quiz leads <span class="spinner" id="leads-busy" hidden aria-hidden="true"></span></h2>
           <div class="admin-actions">
             <button class="btn btn-ghost" type="button" id="refresh-btn">Refresh</button>
             <button class="btn btn-ghost" type="button" id="logout-btn">Log out</button>
@@ -199,6 +202,7 @@
       var leadsBody = document.getElementById("leads-body");
       var leadsCount = document.getElementById("leads-count");
       var leadsEmpty = document.getElementById("leads-empty");
+      var leadsBusy = document.getElementById("leads-busy");
       var statsEl = document.getElementById("admin-stats");
       var chartEl = document.getElementById("admin-chart");
       var logoutBtn = document.getElementById("logout-btn");
@@ -327,8 +331,8 @@
           leadsBody.innerHTML = "";
           leadsEmpty.hidden = false;
           leadsEmpty.textContent = total
-            ? "No leads match your search or filter."
-            : "No leads yet — they’ll show up here once visitors take the quiz.";
+            ? "🔍 No leads match your search or filter."
+            : "🐾 No leads yet — they’ll show up here once visitors take the quiz.";
           pagerEl.hidden = true;
         } else {
           leadsEmpty.hidden = true;
@@ -441,13 +445,20 @@
       }
 
       function loadLeads() {
+        if (leadsBusy) leadsBusy.hidden = false;
         return fetch("/api/admin/leads", { headers: { Accept: "application/json" } })
           .then(function (r) {
             if (r.status === 401) { showLogin(); return null; }
             if (!r.ok) throw new Error("Could not load leads.");
             return r.json();
           })
-          .then(function (data) { if (data) showLeads(data.leads || []); });
+          .then(function (data) {
+            if (data) showLeads(data.leads || []);
+            if (leadsBusy) leadsBusy.hidden = true;
+          }, function (err) {
+            if (leadsBusy) leadsBusy.hidden = true;
+            throw err;
+          });
       }
 
       headers.forEach(function (th) {
