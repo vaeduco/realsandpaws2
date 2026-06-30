@@ -12,7 +12,7 @@
   <link rel="stylesheet" href="styles.css">
   <title>Admin — RealAndPaws 🐾</title>
   <style>
-    .admin-wrap { max-width: 920px; margin: 0 auto; padding: clamp(1.5rem, 5vw, 3rem) var(--container-pad); }
+    .admin-wrap { max-width: 980px; margin: 0 auto; padding: clamp(1.5rem, 5vw, 3rem) var(--container-pad); }
     .admin-card {
       background: var(--white);
       border: 1px solid var(--sand);
@@ -33,13 +33,37 @@
     .admin-login input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(232, 132, 60, 0.22); }
     .admin-login .btn { width: 100%; margin-top: 0.4rem; }
     .admin-error { color: #B23B2E; font-weight: 800; min-height: 1.2em; margin: 0 0 0.6rem; }
-    .admin-head { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; margin-bottom: 0.3rem; }
+
+    .admin-head { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; margin-bottom: 1.3rem; }
     .admin-head h2 { margin: 0; font-size: 1.4rem; }
-    .admin-count { color: var(--muted); font-weight: 700; margin: 0 0 1.2rem; }
+    .admin-actions { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+    .admin-actions .btn { padding: 0.5rem 1.1rem; font-size: 0.95rem; }
+
+    /* Summary cards */
+    .admin-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin: 0 0 1.5rem; }
+    .stat-card { background: var(--cream); border: 1px solid var(--sand); border-radius: 12px; padding: 0.9rem 1rem; }
+    .stat-card .num { display: block; font-family: var(--font-head); font-weight: 800; font-size: 1.9rem; color: var(--primary-dark); line-height: 1.05; }
+    .stat-card .label { color: var(--muted); font-weight: 700; font-size: 0.85rem; }
+
+    /* Bar chart (pure CSS, no library) */
+    .admin-chart-card { background: var(--cream); border: 1px solid var(--sand); border-radius: 12px; padding: 1rem 1.1rem 0.8rem; margin: 0 0 1.7rem; }
+    .admin-chart-title { font-size: 1.05rem; margin: 0 0 1rem; color: var(--brown); }
+    .admin-chart-title span { color: var(--muted); font-weight: 600; font-size: 0.85rem; }
+    .admin-chart { display: flex; align-items: flex-end; gap: 4px; }
+    .chart-col { flex: 1 1 0; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 3px; min-width: 0; }
+    .chart-col .cnt { font-size: 0.7rem; font-weight: 800; color: var(--primary-dark); line-height: 1; min-height: 0.8em; }
+    .chart-col .bar { width: 100%; max-width: 26px; background: var(--primary); border-radius: 5px 5px 0 0; min-height: 3px; }
+    .chart-col .day { font-size: 0.66rem; color: var(--muted); line-height: 1.1; }
+    .admin-chart-empty { color: var(--muted); font-weight: 700; margin: 0.5rem 0 1rem; }
+
+    .admin-count { color: var(--muted); font-weight: 700; margin: 0 0 0.8rem; }
     .admin-table-wrap { overflow-x: auto; }
     .admin-table { width: 100%; border-collapse: collapse; font-size: 0.95rem; }
     .admin-table th, .admin-table td { text-align: left; padding: 0.7rem 0.8rem; border-bottom: 1px solid var(--sand); white-space: nowrap; }
     .admin-table th { font-family: var(--font-head); color: var(--brown); font-weight: 700; background: var(--cream); position: sticky; top: 0; }
+    .admin-table th.sortable { cursor: pointer; user-select: none; }
+    .admin-table th.sortable:hover { color: var(--primary-dark); }
+    .admin-table th .arrow { color: var(--primary); font-size: 0.85em; }
     .admin-table td { color: var(--text); }
     .admin-table tbody tr:hover { background: var(--cream); }
     .admin-empty { color: var(--muted); font-weight: 700; }
@@ -68,13 +92,29 @@
       <div id="leads-view" hidden>
         <div class="admin-head">
           <h2>Quiz leads</h2>
-          <button class="btn btn-ghost" type="button" id="logout-btn">Log out</button>
+          <div class="admin-actions">
+            <button class="btn btn-ghost" type="button" id="refresh-btn">Refresh</button>
+            <button class="btn btn-ghost" type="button" id="logout-btn">Log out</button>
+          </div>
         </div>
+
+        <div class="admin-stats" id="admin-stats"></div>
+
+        <div class="admin-chart-card">
+          <h3 class="admin-chart-title">Leads per day <span>(last 14 days)</span></h3>
+          <div class="admin-chart" id="admin-chart" role="img" aria-label="Bar chart of leads collected per day over the last 14 days"></div>
+        </div>
+
         <p class="admin-count" id="leads-count"></p>
         <div class="admin-table-wrap">
           <table class="admin-table">
             <thead>
-              <tr><th>Name</th><th>Email</th><th>Phone</th><th>Date submitted</th></tr>
+              <tr>
+                <th class="sortable" data-sort="name">Name <span class="arrow" aria-hidden="true"></span></th>
+                <th class="sortable" data-sort="email">Email <span class="arrow" aria-hidden="true"></span></th>
+                <th>Phone</th>
+                <th class="sortable" data-sort="created_at">Date submitted <span class="arrow" aria-hidden="true"></span></th>
+              </tr>
             </thead>
             <tbody id="leads-body"></tbody>
           </table>
@@ -93,7 +133,16 @@
       var leadsBody = document.getElementById("leads-body");
       var leadsCount = document.getElementById("leads-count");
       var leadsEmpty = document.getElementById("leads-empty");
+      var statsEl = document.getElementById("admin-stats");
+      var chartEl = document.getElementById("admin-chart");
       var logoutBtn = document.getElementById("logout-btn");
+      var refreshBtn = document.getElementById("refresh-btn");
+      var headers = Array.prototype.slice.call(document.querySelectorAll(".admin-table th.sortable"));
+
+      var leadsData = [];
+      var sortKey = "created_at";
+      var sortDir = "desc";
+      var MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
       function esc(s) { var d = document.createElement("div"); d.textContent = s == null ? "" : String(s); return d.innerHTML; }
       function fmtDate(iso) {
@@ -104,17 +153,86 @@
 
       function showLogin() { loading.hidden = true; leadsView.hidden = true; loginForm.hidden = false; }
 
+      function renderStats() {
+        var total = leadsData.length;
+        var now = Date.now();
+        var weekAgo = now - 7 * 24 * 60 * 60 * 1000;
+        var startToday = new Date(); startToday.setHours(0, 0, 0, 0);
+        var st = startToday.getTime();
+        var week = 0, today = 0;
+        leadsData.forEach(function (l) {
+          var t = new Date(l.created_at).getTime();
+          if (isNaN(t)) return;
+          if (t >= weekAgo) week++;
+          if (t >= st) today++;
+        });
+        function card(n, label) { return '<div class="stat-card"><span class="num">' + n + '</span><span class="label">' + label + "</span></div>"; }
+        statsEl.innerHTML = card(total, "Total leads") + card(week, "Last 7 days") + card(today, "Today");
+      }
+
+      function renderChart() {
+        if (!leadsData.length) { chartEl.innerHTML = '<p class="admin-chart-empty">No leads yet to chart.</p>'; return; }
+        var today = new Date(); today.setHours(0, 0, 0, 0);
+        var days = [];
+        for (var i = 13; i >= 0; i--) { var d = new Date(today); d.setDate(d.getDate() - i); days.push({ d: d, count: 0 }); }
+        function key(d) { return d.getFullYear() + "-" + (d.getMonth() + 1) + "-" + d.getDate(); }
+        var map = {};
+        days.forEach(function (b) { map[key(b.d)] = b; });
+        leadsData.forEach(function (l) {
+          var d = new Date(l.created_at);
+          if (isNaN(d.getTime())) return;
+          d.setHours(0, 0, 0, 0);
+          var b = map[key(d)];
+          if (b) b.count++;
+        });
+        var max = 1;
+        days.forEach(function (b) { if (b.count > max) max = b.count; });
+        chartEl.innerHTML = days.map(function (b) {
+          var h = Math.round((b.count / max) * 110);
+          if (b.count > 0 && h < 4) h = 4;
+          var title = MONTHS[b.d.getMonth()] + " " + b.d.getDate() + ": " + b.count + (b.count === 1 ? " lead" : " leads");
+          return '<div class="chart-col" title="' + title + '">' +
+                   '<span class="cnt">' + (b.count || "") + "</span>" +
+                   '<span class="bar" style="height:' + h + 'px"></span>' +
+                   '<span class="day">' + b.d.getDate() + "</span>" +
+                 "</div>";
+        }).join("");
+      }
+
+      function renderTable() {
+        var rows = leadsData.slice();
+        rows.sort(function (a, b) {
+          var r;
+          if (sortKey === "created_at") {
+            r = new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+          } else {
+            r = String(a[sortKey] || "").toLowerCase().localeCompare(String(b[sortKey] || "").toLowerCase());
+          }
+          return sortDir === "asc" ? r : -r;
+        });
+        leadsCount.textContent = leadsData.length + (leadsData.length === 1 ? " lead" : " leads");
+        if (!rows.length) { leadsBody.innerHTML = ""; leadsEmpty.hidden = false; }
+        else {
+          leadsEmpty.hidden = true;
+          leadsBody.innerHTML = rows.map(function (l) {
+            return "<tr><td>" + esc(l.name) + "</td><td>" + esc(l.email) + "</td><td>" +
+                   esc(l.phone) + "</td><td>" + fmtDate(l.created_at) + "</td></tr>";
+          }).join("");
+        }
+        headers.forEach(function (th) {
+          var arrow = th.querySelector(".arrow");
+          arrow.textContent = th.getAttribute("data-sort") === sortKey ? (sortDir === "asc" ? "▲" : "▼") : "";
+        });
+      }
+
+      function render() { renderStats(); renderChart(); renderTable(); }
+
       function showLeads(leads) {
         loading.hidden = true;
         loginForm.hidden = true;
         leadsView.hidden = false;
-        leadsCount.textContent = leads.length + (leads.length === 1 ? " lead" : " leads");
-        if (!leads.length) { leadsBody.innerHTML = ""; leadsEmpty.hidden = false; return; }
-        leadsEmpty.hidden = true;
-        leadsBody.innerHTML = leads.map(function (l) {
-          return "<tr><td>" + esc(l.name) + "</td><td>" + esc(l.email) + "</td><td>" +
-                 esc(l.phone) + "</td><td>" + fmtDate(l.created_at) + "</td></tr>";
-        }).join("");
+        leadsData = Array.isArray(leads) ? leads : [];
+        render();
       }
 
       function loadLeads() {
@@ -126,6 +244,19 @@
           })
           .then(function (data) { if (data) showLeads(data.leads || []); });
       }
+
+      headers.forEach(function (th) {
+        th.addEventListener("click", function () {
+          var key = th.getAttribute("data-sort");
+          if (sortKey === key) {
+            sortDir = sortDir === "asc" ? "desc" : "asc";
+          } else {
+            sortKey = key;
+            sortDir = key === "created_at" ? "desc" : "asc"; // dates default newest-first, text A→Z
+          }
+          renderTable();
+        });
+      });
 
       loginForm.addEventListener("submit", function (e) {
         e.preventDefault();
@@ -144,6 +275,16 @@
           })
           .catch(function (err) { loginError.textContent = err.message || "Login failed."; })
           .then(function () { btn.disabled = false; });
+      });
+
+      refreshBtn.addEventListener("click", function () {
+        refreshBtn.disabled = true;
+        var prev = refreshBtn.textContent;
+        refreshBtn.textContent = "Refreshing…";
+        loadLeads().catch(function () {}).then(function () {
+          refreshBtn.disabled = false;
+          refreshBtn.textContent = prev;
+        });
       });
 
       logoutBtn.addEventListener("click", function () {
