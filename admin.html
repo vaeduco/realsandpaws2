@@ -72,6 +72,14 @@
     .admin-filter { font-weight: 800; color: var(--brown); font-size: 0.9rem; display: inline-flex; align-items: center; gap: 0.45rem; }
     .admin-filter select { font-family: var(--font-body); font-weight: 700; font-size: 0.9rem; padding: 0.4rem 0.6rem; border: 2px solid var(--sand); border-radius: 10px; background: var(--white); color: var(--text); }
     .admin-filter select:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(232, 132, 60, 0.22); }
+    .admin-search {
+      font-family: var(--font-body); font-weight: 600; font-size: 0.9rem;
+      padding: 0.4rem 0.7rem; border: 2px solid var(--sand); border-radius: 10px;
+      background: var(--white); color: var(--text);
+      flex: 1 1 220px; min-width: 180px; max-width: 340px;
+    }
+    .admin-search::placeholder { color: var(--muted); }
+    .admin-search:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(232, 132, 60, 0.22); }
     .badge { display: inline-block; font-weight: 800; font-size: 0.78rem; padding: 0.2rem 0.6rem; border-radius: 999px; line-height: 1.45; }
     .badge-pass { background: #E3F2E0; color: #2F7D32; }
     .badge-fail { background: #FBE3DE; color: #B23B2E; }
@@ -114,6 +122,7 @@
         </div>
 
         <div class="admin-controls">
+          <input type="search" id="search-leads" class="admin-search" placeholder="Search name, email, or phone" aria-label="Search leads" autocomplete="off">
           <label class="admin-filter">Show
             <select id="filter-result">
               <option value="all">All</option>
@@ -156,12 +165,14 @@
       var logoutBtn = document.getElementById("logout-btn");
       var refreshBtn = document.getElementById("refresh-btn");
       var filterSel = document.getElementById("filter-result");
+      var searchInput = document.getElementById("search-leads");
       var headers = Array.prototype.slice.call(document.querySelectorAll(".admin-table th.sortable"));
 
       var leadsData = [];
       var sortKey = "created_at";
       var sortDir = "desc";
       var filterValue = "all";
+      var searchValue = "";
       var MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
       function esc(s) { var d = document.createElement("div"); d.textContent = s == null ? "" : String(s); return d.innerHTML; }
@@ -229,6 +240,14 @@
         var rows = leadsData.slice();
         if (filterValue === "passed") rows = rows.filter(function (l) { return l.passed === true; });
         else if (filterValue === "failed") rows = rows.filter(function (l) { return l.passed === false; });
+        var q = searchValue.trim().toLowerCase();
+        if (q) {
+          rows = rows.filter(function (l) {
+            return String(l.name || "").toLowerCase().indexOf(q) !== -1 ||
+                   String(l.email || "").toLowerCase().indexOf(q) !== -1 ||
+                   String(l.phone || "").toLowerCase().indexOf(q) !== -1;
+          });
+        }
         rows.sort(function (a, b) {
           var r;
           if (sortKey === "created_at") {
@@ -245,7 +264,7 @@
         if (!rows.length) {
           leadsBody.innerHTML = "";
           leadsEmpty.hidden = false;
-          leadsEmpty.textContent = total ? "No leads match this filter." : "No leads yet.";
+          leadsEmpty.textContent = total ? "No leads match your search or filter." : "No leads yet.";
         } else {
           leadsEmpty.hidden = true;
           leadsBody.innerHTML = rows.map(function (l) {
@@ -293,6 +312,7 @@
       });
 
       filterSel.addEventListener("change", function () { filterValue = filterSel.value; renderTable(); });
+      searchInput.addEventListener("input", function () { searchValue = searchInput.value; renderTable(); });
 
       loginForm.addEventListener("submit", function (e) {
         e.preventDefault();
