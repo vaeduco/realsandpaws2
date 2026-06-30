@@ -96,6 +96,13 @@
     .lead-detail { display: grid; grid-template-columns: auto 1fr; gap: 0.35rem 1.1rem; margin: 0; padding: 0.3rem 0.2rem; font-size: 0.9rem; }
     .lead-detail dt { color: var(--muted); font-weight: 800; }
     .lead-detail dd { margin: 0; color: var(--text); word-break: break-word; }
+    .admin-table th.check-col, .admin-table td.check-col { width: 1%; text-align: center; }
+    .row-check, #select-all { width: 16px; height: 16px; accent-color: var(--primary-deep); cursor: pointer; }
+    .bulk-bar { display: flex; align-items: center; gap: 0.9rem; flex-wrap: wrap; margin: 0 0 0.9rem; padding: 0.6rem 0.9rem; background: var(--peach); border-radius: 10px; }
+    .bulk-bar[hidden] { display: none; }
+    .bulk-bar .bulk-count { font-weight: 800; color: var(--brown); }
+    .bulk-delete-btn { border: 0; background: #B23B2E; color: #fff; font-family: var(--font-body); font-weight: 800; font-size: 0.9rem; padding: 0.45rem 1rem; border-radius: 999px; cursor: pointer; }
+    .bulk-delete-btn:hover { background: #8F2D23; }
   </style>
 </head>
 <body>
@@ -143,11 +150,16 @@
             </select>
           </label>
         </div>
+        <div class="bulk-bar" id="bulk-bar" hidden>
+          <span class="bulk-count" id="bulk-count"></span>
+          <button type="button" class="bulk-delete-btn" id="bulk-delete">Delete selected</button>
+        </div>
         <p class="admin-count" id="leads-count"></p>
         <div class="admin-table-wrap">
           <table class="admin-table">
             <thead>
               <tr>
+                <th class="check-col"><input type="checkbox" id="select-all" aria-label="Select all leads"></th>
                 <th class="sortable" data-sort="name">Name <span class="arrow" aria-hidden="true"></span></th>
                 <th class="sortable" data-sort="email">Email <span class="arrow" aria-hidden="true"></span></th>
                 <th>Phone</th>
@@ -179,6 +191,10 @@
       var refreshBtn = document.getElementById("refresh-btn");
       var filterSel = document.getElementById("filter-result");
       var searchInput = document.getElementById("search-leads");
+      var selectAllEl = document.getElementById("select-all");
+      var bulkBar = document.getElementById("bulk-bar");
+      var bulkCount = document.getElementById("bulk-count");
+      var bulkDeleteBtn = document.getElementById("bulk-delete");
       var headers = Array.prototype.slice.call(document.querySelectorAll(".admin-table th.sortable"));
 
       var leadsData = [];
@@ -187,6 +203,8 @@
       var filterValue = "all";
       var searchValue = "";
       var openMenu = null;
+      var selected = {};
+      var visibleIds = [];
       var MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
       function esc(s) { var d = document.createElement("div"); d.textContent = s == null ? "" : String(s); return d.innerHTML; }
@@ -272,6 +290,7 @@
           }
           return sortDir === "asc" ? r : -r;
         });
+        visibleIds = rows.map(function (l) { return String(l.id); });
         var total = leadsData.length;
         leadsCount.textContent = rows.length === total
           ? total + (total === 1 ? " lead" : " leads")
@@ -283,7 +302,9 @@
         } else {
           leadsEmpty.hidden = true;
           leadsBody.innerHTML = rows.map(function (l) {
-            return '<tr data-id="' + esc(l.id) + '"><td>' + esc(l.name) + "</td><td>" + esc(l.email) + "</td><td>" +
+            return '<tr data-id="' + esc(l.id) + '">' +
+                   '<td class="check-col"><input type="checkbox" class="row-check" data-id="' + esc(l.id) + '"' + (selected[String(l.id)] ? " checked" : "") + "></td>" +
+                   "<td>" + esc(l.name) + "</td><td>" + esc(l.email) + "</td><td>" +
                    esc(l.phone) + "</td><td>" + fmtDate(l.created_at) + "</td><td>" + resultBadge(l) + "</td>" +
                    '<td class="row-actions">' +
                      '<button class="row-menu-btn" type="button" aria-haspopup="true" aria-expanded="false" aria-label="Row actions">⋯</button>' +
@@ -298,6 +319,7 @@
           var arrow = th.querySelector(".arrow");
           arrow.textContent = th.getAttribute("data-sort") === sortKey ? (sortDir === "asc" ? "▲" : "▼") : "";
         });
+        updateSelectionUI();
       }
 
       function render() { renderStats(); renderChart(); renderTable(); }
@@ -340,7 +362,7 @@
         var l = leadById(id);
         if (!l) return;
         var quiz = (l.score === 0 || l.score) ? (l.score + "/10 — " + (l.passed ? "Passed" : "Failed")) : "Quiz not completed";
-        var html = '<tr class="detail-row"><td colspan="6"><dl class="lead-detail">' +
+        var html = '<tr class="detail-row"><td colspan="7"><dl class="lead-detail">' +
           "<dt>Name</dt><dd>" + esc(l.name) + "</dd>" +
           "<dt>Email</dt><dd>" + esc(l.email) + "</dd>" +
           "<dt>Phone</dt><dd>" + esc(l.phone) + "</dd>" +
@@ -359,9 +381,20 @@
           body: JSON.stringify({ ids: [parseInt(id, 10)] })
         }).then(function (r) {
           if (!r.ok) throw new Error();
+          delete selected[String(id)];
           leadsData = leadsData.filter(function (l) { return String(l.id) !== String(id); });
           render();
         }).catch(function () { window.alert("Sorry, that lead couldn't be deleted."); });
+      }
+
+      function updateSelectionUI() {
+        var count = 0;
+        for (var k in selected) { if (selected.hasOwnProperty(k)) count++; }
+        var allVis = visibleIds.length > 0 && visibleIds.every(function (id) { return selected[id]; });
+        var someVis = visibleIds.some(function (id) { return selected[id]; });
+        if (selectAllEl) { selectAllEl.checked = allVis; selectAllEl.indeterminate = someVis && !allVis; }
+        if (count > 0) { bulkBar.hidden = false; bulkCount.textContent = count + (count === 1 ? " lead selected" : " leads selected"); }
+        else { bulkBar.hidden = true; }
       }
 
       function showLeads(leads) {
@@ -414,6 +447,36 @@
       document.addEventListener("keydown", function (e) { if (e.key === "Escape") closeMenu(); });
       window.addEventListener("scroll", closeMenu, true);
       window.addEventListener("resize", closeMenu);
+
+      selectAllEl.addEventListener("change", function () {
+        if (selectAllEl.checked) visibleIds.forEach(function (id) { selected[id] = true; });
+        else visibleIds.forEach(function (id) { delete selected[id]; });
+        renderTable();
+      });
+      leadsBody.addEventListener("change", function (e) {
+        var cb = e.target.closest(".row-check");
+        if (!cb) return;
+        var id = cb.getAttribute("data-id");
+        if (cb.checked) selected[id] = true; else delete selected[id];
+        updateSelectionUI();
+      });
+      bulkDeleteBtn.addEventListener("click", function () {
+        var ids = [];
+        for (var k in selected) { if (selected.hasOwnProperty(k)) ids.push(k); }
+        if (!ids.length) return;
+        if (!window.confirm("Delete " + ids.length + " selected lead" + (ids.length === 1 ? "" : "s") + "? This can't be undone.")) return;
+        fetch("/api/admin/delete", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ ids: ids.map(function (x) { return parseInt(x, 10); }) })
+        }).then(function (r) {
+          if (!r.ok) throw new Error();
+          var gone = {}; ids.forEach(function (id) { gone[id] = 1; });
+          leadsData = leadsData.filter(function (l) { return !gone[String(l.id)]; });
+          selected = {};
+          render();
+        }).catch(function () { window.alert("Sorry, the selected leads couldn't be deleted."); });
+      });
 
       loginForm.addEventListener("submit", function (e) {
         e.preventDefault();
