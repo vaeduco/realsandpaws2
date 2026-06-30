@@ -84,6 +84,18 @@
     .badge-pass { background: #E3F2E0; color: #2F7D32; }
     .badge-fail { background: #FBE3DE; color: #B23B2E; }
     .badge-incomplete { background: var(--sand); color: var(--muted); }
+    .admin-table th.actions-col, .admin-table td.row-actions { width: 1%; white-space: nowrap; text-align: right; position: relative; }
+    .row-menu-btn { border: 0; background: transparent; color: var(--brown); font-size: 1.25rem; line-height: 1; cursor: pointer; padding: 0.1rem 0.5rem; border-radius: 8px; }
+    .row-menu-btn:hover { background: var(--sand); }
+    .row-menu { background: var(--white); border: 1px solid var(--sand); border-radius: 10px; box-shadow: var(--shadow); padding: 0.3rem; min-width: 150px; }
+    .row-menu[hidden] { display: none; }
+    .row-menu button { display: block; width: 100%; text-align: left; border: 0; background: transparent; font-family: var(--font-body); font-weight: 700; font-size: 0.9rem; color: var(--text); padding: 0.5rem 0.7rem; border-radius: 8px; cursor: pointer; }
+    .row-menu button:hover { background: var(--cream); }
+    .row-menu button[data-act="delete"] { color: #B23B2E; }
+    .detail-row td { background: var(--cream); }
+    .lead-detail { display: grid; grid-template-columns: auto 1fr; gap: 0.35rem 1.1rem; margin: 0; padding: 0.3rem 0.2rem; font-size: 0.9rem; }
+    .lead-detail dt { color: var(--muted); font-weight: 800; }
+    .lead-detail dd { margin: 0; color: var(--text); word-break: break-word; }
   </style>
 </head>
 <body>
@@ -141,6 +153,7 @@
                 <th>Phone</th>
                 <th class="sortable" data-sort="created_at">Date submitted <span class="arrow" aria-hidden="true"></span></th>
                 <th>Result</th>
+                <th class="actions-col" aria-label="Row actions"></th>
               </tr>
             </thead>
             <tbody id="leads-body"></tbody>
@@ -173,6 +186,7 @@
       var sortDir = "desc";
       var filterValue = "all";
       var searchValue = "";
+      var openMenu = null;
       var MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
       function esc(s) { var d = document.createElement("div"); d.textContent = s == null ? "" : String(s); return d.innerHTML; }
@@ -237,6 +251,7 @@
       }
 
       function renderTable() {
+        closeMenu();
         var rows = leadsData.slice();
         if (filterValue === "passed") rows = rows.filter(function (l) { return l.passed === true; });
         else if (filterValue === "failed") rows = rows.filter(function (l) { return l.passed === false; });
@@ -268,8 +283,15 @@
         } else {
           leadsEmpty.hidden = true;
           leadsBody.innerHTML = rows.map(function (l) {
-            return "<tr><td>" + esc(l.name) + "</td><td>" + esc(l.email) + "</td><td>" +
-                   esc(l.phone) + "</td><td>" + fmtDate(l.created_at) + "</td><td>" + resultBadge(l) + "</td></tr>";
+            return '<tr data-id="' + esc(l.id) + '"><td>' + esc(l.name) + "</td><td>" + esc(l.email) + "</td><td>" +
+                   esc(l.phone) + "</td><td>" + fmtDate(l.created_at) + "</td><td>" + resultBadge(l) + "</td>" +
+                   '<td class="row-actions">' +
+                     '<button class="row-menu-btn" type="button" aria-haspopup="true" aria-expanded="false" aria-label="Row actions">⋯</button>' +
+                     '<div class="row-menu" hidden>' +
+                       '<button type="button" data-act="view">View details</button>' +
+                       '<button type="button" data-act="delete">Delete</button>' +
+                     "</div>" +
+                   "</td></tr>";
           }).join("");
         }
         headers.forEach(function (th) {
@@ -279,6 +301,68 @@
       }
 
       function render() { renderStats(); renderChart(); renderTable(); }
+
+      function leadById(id) {
+        for (var i = 0; i < leadsData.length; i++) { if (String(leadsData[i].id) === String(id)) return leadsData[i]; }
+        return null;
+      }
+
+      function closeMenu() {
+        if (!openMenu) return;
+        openMenu.menu.hidden = true;
+        openMenu.menu.style.position = "";
+        openMenu.menu.style.top = "";
+        openMenu.menu.style.left = "";
+        openMenu.btn.setAttribute("aria-expanded", "false");
+        openMenu = null;
+      }
+
+      function openRowMenu(btn) {
+        closeMenu();
+        var menu = btn.parentNode.querySelector(".row-menu");
+        if (!menu) return;
+        menu.hidden = false;
+        menu.style.position = "fixed"; // float above the table's scroll container so it isn't clipped
+        var rect = btn.getBoundingClientRect();
+        menu.style.top = Math.round(rect.bottom + 4) + "px";
+        menu.style.left = Math.round(rect.right - menu.offsetWidth) + "px";
+        btn.setAttribute("aria-expanded", "true");
+        openMenu = { btn: btn, menu: menu };
+      }
+
+      function toggleDetails(tr, id) {
+        if (tr.classList.contains("expanded")) {
+          tr.classList.remove("expanded");
+          var dr = tr.nextElementSibling;
+          if (dr && dr.classList.contains("detail-row")) dr.parentNode.removeChild(dr);
+          return;
+        }
+        var l = leadById(id);
+        if (!l) return;
+        var quiz = (l.score === 0 || l.score) ? (l.score + "/10 — " + (l.passed ? "Passed" : "Failed")) : "Quiz not completed";
+        var html = '<tr class="detail-row"><td colspan="6"><dl class="lead-detail">' +
+          "<dt>Name</dt><dd>" + esc(l.name) + "</dd>" +
+          "<dt>Email</dt><dd>" + esc(l.email) + "</dd>" +
+          "<dt>Phone</dt><dd>" + esc(l.phone) + "</dd>" +
+          "<dt>Submitted</dt><dd>" + fmtDate(l.created_at) + "</dd>" +
+          "<dt>Quiz result</dt><dd>" + esc(quiz) + "</dd>" +
+          "</dl></td></tr>";
+        tr.classList.add("expanded");
+        tr.insertAdjacentHTML("afterend", html);
+      }
+
+      function deleteLead(id) {
+        if (!window.confirm("Delete this lead? This can't be undone.")) return;
+        fetch("/api/admin/delete", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ ids: [parseInt(id, 10)] })
+        }).then(function (r) {
+          if (!r.ok) throw new Error();
+          leadsData = leadsData.filter(function (l) { return String(l.id) !== String(id); });
+          render();
+        }).catch(function () { window.alert("Sorry, that lead couldn't be deleted."); });
+      }
 
       function showLeads(leads) {
         loading.hidden = true;
@@ -313,6 +397,23 @@
 
       filterSel.addEventListener("change", function () { filterValue = filterSel.value; renderTable(); });
       searchInput.addEventListener("input", function () { searchValue = searchInput.value; renderTable(); });
+
+      leadsBody.addEventListener("click", function (e) {
+        var mb = e.target.closest(".row-menu-btn");
+        if (mb) { if (openMenu && openMenu.btn === mb) closeMenu(); else openRowMenu(mb); return; }
+        var act = e.target.closest("[data-act]");
+        if (!act) return;
+        var tr = act.closest("tr");
+        var id = tr.getAttribute("data-id");
+        var which = act.getAttribute("data-act");
+        closeMenu();
+        if (which === "view") toggleDetails(tr, id);
+        else if (which === "delete") deleteLead(id);
+      });
+      document.addEventListener("click", function (e) { if (!e.target.closest(".row-actions")) closeMenu(); });
+      document.addEventListener("keydown", function (e) { if (e.key === "Escape") closeMenu(); });
+      window.addEventListener("scroll", closeMenu, true);
+      window.addEventListener("resize", closeMenu);
 
       loginForm.addEventListener("submit", function (e) {
         e.preventDefault();
