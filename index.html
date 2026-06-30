@@ -123,28 +123,7 @@
             </div>
             <div class="calc-field">
               <label for="dog-breed">Breed</label>
-              <select id="dog-breed">
-                <option value="" selected disabled hidden>Select your dog's breed</option>
-                <option value="Labrador Retriever">Labrador Retriever</option>
-                <option value="German Shepherd">German Shepherd</option>
-                <option value="Golden Retriever">Golden Retriever</option>
-                <option value="French Bulldog">French Bulldog</option>
-                <option value="Beagle">Beagle</option>
-                <option value="Poodle">Poodle</option>
-                <option value="Pug">Pug</option>
-                <option value="Siberian Husky">Siberian Husky</option>
-                <option value="Dachshund">Dachshund</option>
-                <option value="Boxer">Boxer</option>
-                <option value="Pomeranian">Pomeranian</option>
-                <option value="Rottweiler">Rottweiler</option>
-                <option value="Belgian Malinois">Belgian Malinois</option>
-                <option value="Shiba Inu">Shiba Inu</option>
-                <option value="Doberman Pinscher">Doberman Pinscher</option>
-                <option value="Miniature Pinscher">Miniature Pinscher</option>
-                <option value="Great Dane">Great Dane</option>
-                <option value="Cane Corso">Cane Corso</option>
-                <option value="mixed">Mixed / Other breed</option>
-              </select>
+              <input type="text" id="dog-breed" placeholder="Enter your dog's breed" autocomplete="off">
             </div>
             <div class="calc-field">
               <label for="dog-weight">Weight</label>
@@ -205,7 +184,7 @@
       if (!form) return;
       var ageInput = document.getElementById("dog-age");
       var ageUnit = document.getElementById("age-unit");
-      var breedSel = document.getElementById("dog-breed");
+      var breedInput = document.getElementById("dog-breed");
       var weightInput = document.getElementById("dog-weight");
       var weightUnit = document.getElementById("weight-unit");
       var result = document.getElementById("calc-result");
@@ -233,14 +212,20 @@
         result.textContent = msg;
       }
 
+      function esc(s) {
+        var d = document.createElement("div");
+        d.textContent = s == null ? "" : String(s);
+        return d.innerHTML;
+      }
+
       form.addEventListener("submit", function (e) {
         e.preventDefault();
         var ageVal = parseFloat(ageInput.value);
         if (isNaN(ageVal) || ageVal < 0) { showError("Please enter your dog's age."); return; }
         var weightVal = parseFloat(weightInput.value);
         if (isNaN(weightVal) || weightVal <= 0) { showError("Please enter your dog's weight so we can pick the right aging rate."); return; }
-        var breed = breedSel.value;
-        if (!breed) { showError("Please select your dog's breed."); return; }
+        var breed = breedInput.value.trim();
+        if (!breed) { showError("Please enter your dog's breed."); return; }
 
         var ageYears = ageUnit.value === "months" ? ageVal / 12 : ageVal;
         if (ageYears > 30) ageYears = 30;
@@ -248,7 +233,7 @@
         var size = sizeFromLbs(lbs);
         var human = dogToHuman(ageYears, size);
 
-        var subject = breed === "mixed" ? "Your mixed-breed pup" : "Your " + breed;
+        var subject = /\bmix(ed|es)?\b/i.test(breed) ? "Your mixed-breed pup" : "Your " + esc(breed);
         var sizeWord = { small: "small", medium: "medium-size", large: "large" }[size];
 
         result.className = "calc-result";
