@@ -24,9 +24,9 @@ module.exports = async (req, res) => {
     if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { res.status(400).json({ error: "Invalid email address." }); return; }
     if (name.length > 200 || email.length > 200 || phone.length > 60) { res.status(400).json({ error: "Input too long." }); return; }
 
-    var r = await supabase("quiz_leads", {
+    var r = await supabase("quiz_leads?select=id", {
       method: "POST",
-      headers: { "Content-Type": "application/json", Prefer: "return=minimal" },
+      headers: { "Content-Type": "application/json", Prefer: "return=representation" },
       body: JSON.stringify({ name: name, email: email, phone: phone })
     });
     if (!r.ok) {
@@ -35,7 +35,9 @@ module.exports = async (req, res) => {
       res.status(502).json({ error: "Could not save lead.", status: r.status, detail: detail.slice(0, 300) });
       return;
     }
-    res.status(201).json({ ok: true });
+    var rows = await r.json().catch(function () { return []; });
+    var id = rows && rows[0] ? rows[0].id : null;
+    res.status(201).json({ ok: true, id: id });
   } catch (e) {
     console.error("lead handler error:", e);
     res.status(500).json({ error: "Unexpected error.", detail: String((e && e.message) || e) });

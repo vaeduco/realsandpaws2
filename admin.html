@@ -68,6 +68,14 @@
     .admin-table tbody tr:hover { background: var(--cream); }
     .admin-empty { color: var(--muted); font-weight: 700; }
     .admin-loading { color: var(--muted); font-weight: 700; }
+    .admin-controls { display: flex; flex-wrap: wrap; gap: 0.8rem; align-items: center; margin: 0 0 0.9rem; }
+    .admin-filter { font-weight: 800; color: var(--brown); font-size: 0.9rem; display: inline-flex; align-items: center; gap: 0.45rem; }
+    .admin-filter select { font-family: var(--font-body); font-weight: 700; font-size: 0.9rem; padding: 0.4rem 0.6rem; border: 2px solid var(--sand); border-radius: 10px; background: var(--white); color: var(--text); }
+    .admin-filter select:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(232, 132, 60, 0.22); }
+    .badge { display: inline-block; font-weight: 800; font-size: 0.78rem; padding: 0.2rem 0.6rem; border-radius: 999px; line-height: 1.45; }
+    .badge-pass { background: #E3F2E0; color: #2F7D32; }
+    .badge-fail { background: #FBE3DE; color: #B23B2E; }
+    .badge-incomplete { background: var(--sand); color: var(--muted); }
   </style>
 </head>
 <body>
@@ -105,6 +113,15 @@
           <div class="admin-chart" id="admin-chart" role="img" aria-label="Bar chart of leads collected per day over the last 14 days"></div>
         </div>
 
+        <div class="admin-controls">
+          <label class="admin-filter">Show
+            <select id="filter-result">
+              <option value="all">All</option>
+              <option value="passed">Passed</option>
+              <option value="failed">Failed</option>
+            </select>
+          </label>
+        </div>
         <p class="admin-count" id="leads-count"></p>
         <div class="admin-table-wrap">
           <table class="admin-table">
@@ -114,6 +131,7 @@
                 <th class="sortable" data-sort="email">Email <span class="arrow" aria-hidden="true"></span></th>
                 <th>Phone</th>
                 <th class="sortable" data-sort="created_at">Date submitted <span class="arrow" aria-hidden="true"></span></th>
+                <th>Result</th>
               </tr>
             </thead>
             <tbody id="leads-body"></tbody>
@@ -137,11 +155,13 @@
       var chartEl = document.getElementById("admin-chart");
       var logoutBtn = document.getElementById("logout-btn");
       var refreshBtn = document.getElementById("refresh-btn");
+      var filterSel = document.getElementById("filter-result");
       var headers = Array.prototype.slice.call(document.querySelectorAll(".admin-table th.sortable"));
 
       var leadsData = [];
       var sortKey = "created_at";
       var sortDir = "desc";
+      var filterValue = "all";
       var MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
       function esc(s) { var d = document.createElement("div"); d.textContent = s == null ? "" : String(s); return d.innerHTML; }
@@ -159,15 +179,15 @@
         var weekAgo = now - 7 * 24 * 60 * 60 * 1000;
         var startToday = new Date(); startToday.setHours(0, 0, 0, 0);
         var st = startToday.getTime();
-        var week = 0, today = 0;
+        var week = 0, today = 0, passed = 0, failed = 0;
         leadsData.forEach(function (l) {
           var t = new Date(l.created_at).getTime();
-          if (isNaN(t)) return;
-          if (t >= weekAgo) week++;
-          if (t >= st) today++;
+          if (!isNaN(t)) { if (t >= weekAgo) week++; if (t >= st) today++; }
+          if (l.passed === true) passed++;
+          else if (l.passed === false) failed++;
         });
         function card(n, label) { return '<div class="stat-card"><span class="num">' + n + '</span><span class="label">' + label + "</span></div>"; }
-        statsEl.innerHTML = card(total, "Total leads") + card(week, "Last 7 days") + card(today, "Today");
+        statsEl.innerHTML = card(total, "Total leads") + card(passed, "Passed") + card(failed, "Failed") + card(week, "Last 7 days") + card(today, "Today");
       }
 
       function renderChart() {
@@ -199,8 +219,16 @@
         }).join("");
       }
 
+      function resultBadge(l) {
+        if (l.passed === true) return '<span class="badge badge-pass">Passed</span>';
+        if (l.passed === false) return '<span class="badge badge-fail">Failed</span>';
+        return '<span class="badge badge-incomplete">Incomplete</span>';
+      }
+
       function renderTable() {
         var rows = leadsData.slice();
+        if (filterValue === "passed") rows = rows.filter(function (l) { return l.passed === true; });
+        else if (filterValue === "failed") rows = rows.filter(function (l) { return l.passed === false; });
         rows.sort(function (a, b) {
           var r;
           if (sortKey === "created_at") {
@@ -210,13 +238,19 @@
           }
           return sortDir === "asc" ? r : -r;
         });
-        leadsCount.textContent = leadsData.length + (leadsData.length === 1 ? " lead" : " leads");
-        if (!rows.length) { leadsBody.innerHTML = ""; leadsEmpty.hidden = false; }
-        else {
+        var total = leadsData.length;
+        leadsCount.textContent = rows.length === total
+          ? total + (total === 1 ? " lead" : " leads")
+          : "Showing " + rows.length + " of " + total + " leads";
+        if (!rows.length) {
+          leadsBody.innerHTML = "";
+          leadsEmpty.hidden = false;
+          leadsEmpty.textContent = total ? "No leads match this filter." : "No leads yet.";
+        } else {
           leadsEmpty.hidden = true;
           leadsBody.innerHTML = rows.map(function (l) {
             return "<tr><td>" + esc(l.name) + "</td><td>" + esc(l.email) + "</td><td>" +
-                   esc(l.phone) + "</td><td>" + fmtDate(l.created_at) + "</td></tr>";
+                   esc(l.phone) + "</td><td>" + fmtDate(l.created_at) + "</td><td>" + resultBadge(l) + "</td></tr>";
           }).join("");
         }
         headers.forEach(function (th) {
@@ -257,6 +291,8 @@
           renderTable();
         });
       });
+
+      filterSel.addEventListener("change", function () { filterValue = filterSel.value; renderTable(); });
 
       loginForm.addEventListener("submit", function (e) {
         e.preventDefault();

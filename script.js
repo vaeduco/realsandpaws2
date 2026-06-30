@@ -43,6 +43,7 @@
 
   var COUNT = 10;   // questions per round
   var PASS = 6;     // passing score
+  var leadId = null; // id of the lead row created when the form was submitted
 
   // A pool large enough that each round of 10 can differ from the last.
   var BANK = [
@@ -191,7 +192,9 @@
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ name: name, email: email, phone: phone })
     }).then(function (r) {
-      if (r.ok) { renderQuiz(); return; }
+      if (r.ok) {
+        return r.json().catch(function () { return {}; }).then(function (j) { leadId = (j && j.id) || null; renderQuiz(); });
+      }
       return r.json().catch(function () { return {}; }).then(function (j) {
         throw new Error(j.detail || j.error || ("HTTP " + r.status));
       });
@@ -245,7 +248,17 @@
       }
       return;
     }
+    recordResult(r.score);
     showResult(r.score);
+  }
+
+  function recordResult(score) {
+    if (!leadId) return; // no lead row to attach the result to
+    fetch("/api/quiz-result", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: leadId, score: score })
+    }).catch(function () {}); // fire-and-forget; the result UI shows regardless
   }
 
   function showResult(s) {

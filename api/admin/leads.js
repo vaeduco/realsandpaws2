@@ -8,7 +8,7 @@ module.exports = async (req, res) => {
   if (!isAuthed(req)) { res.status(401).json({ error: "Unauthorized" }); return; }
   if (!supabaseConfigured()) { res.status(500).json({ error: "Server not configured." }); return; }
   try {
-    var r = await supabase("quiz_leads?select=name,email,phone,created_at&order=created_at.desc");
+    var r = await supabase("quiz_leads?select=id,name,email,phone,created_at,score,passed&order=created_at.desc");
     if (!r.ok) { res.status(502).json({ error: "Could not load leads." }); return; }
     var data = await r.json();
     res.setHeader("Cache-Control", "no-store");

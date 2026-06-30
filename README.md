@@ -121,7 +121,8 @@ details are saved to a Supabase table called `quiz_leads`, and a protected
 The browser never talks to Supabase directly. All access goes through serverless
 functions that use the **service-role key** (a server-only env var):
 
-- `POST /api/lead` — validates the three fields and inserts the lead.
+- `POST /api/lead` — validates the three fields and inserts the lead (returns its id).
+- `POST /api/quiz-result` — records the quiz score + pass/fail for that lead once they finish (pass/fail recomputed server-side; write-once).
 - `POST /api/admin/login` — checks `ADMIN_USER` / `ADMIN_PASSWORD` (constant-time)
   and sets an HMAC-signed, HttpOnly, SameSite session cookie (8-hour expiry).
 - `GET /api/admin/leads` — returns the leads **only** for a request with a valid
@@ -137,16 +138,25 @@ In the Supabase dashboard → **SQL Editor**, run:
 
 ```sql
 create table if not exists public.quiz_leads (
-  id          bigint generated always as identity primary key,
-  name        text        not null,
-  email       text        not null,
-  phone       text        not null,
-  created_at  timestamptz not null default now()
+  id           bigint generated always as identity primary key,
+  name         text        not null,
+  email        text        not null,
+  phone        text        not null,
+  created_at   timestamptz not null default now(),
+  score        int,                 -- null until the quiz is completed
+  passed       boolean,             -- true/false once completed; null = not finished
+  completed_at timestamptz
 );
 
 -- Lock the table down: with RLS on and no policies, the public/anon key has no
 -- access. Our serverless functions use the service-role key, which bypasses RLS.
 alter table public.quiz_leads enable row level security;
+
+-- Already created the table from an earlier version? Add the result columns:
+alter table public.quiz_leads
+  add column if not exists score        int,
+  add column if not exists passed       boolean,
+  add column if not exists completed_at timestamptz;
 ```
 
 ### 2. Set environment variables (Vercel → Project → Settings → Environment Variables)
