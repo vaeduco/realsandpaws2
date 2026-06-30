@@ -103,6 +103,13 @@
     .bulk-bar .bulk-count { font-weight: 800; color: var(--brown); }
     .bulk-delete-btn { border: 0; background: #B23B2E; color: #fff; font-family: var(--font-body); font-weight: 800; font-size: 0.9rem; padding: 0.45rem 1rem; border-radius: 999px; cursor: pointer; }
     .bulk-delete-btn:hover { background: #8F2D23; }
+    .admin-pager { display: flex; align-items: center; justify-content: space-between; gap: 0.8rem; flex-wrap: wrap; margin-top: 1rem; }
+    .admin-pager[hidden] { display: none; }
+    .pager-info { color: var(--muted); font-weight: 700; font-size: 0.9rem; }
+    .pager-btns { display: flex; gap: 0.5rem; }
+    .pager-btn { border: 2px solid var(--sand); background: var(--white); color: var(--brown); font-family: var(--font-body); font-weight: 800; font-size: 0.9rem; padding: 0.4rem 0.9rem; border-radius: 999px; cursor: pointer; }
+    .pager-btn:hover:not(:disabled) { border-color: var(--primary); color: var(--primary-dark); }
+    .pager-btn:disabled { opacity: 0.45; cursor: default; }
   </style>
 </head>
 <body>
@@ -172,6 +179,13 @@
           </table>
         </div>
         <p class="admin-empty" id="leads-empty" hidden>No leads yet.</p>
+        <div class="admin-pager" id="admin-pager" hidden>
+          <span class="pager-info" id="pager-info"></span>
+          <div class="pager-btns">
+            <button type="button" class="pager-btn" id="prev-page">‹ Prev</button>
+            <button type="button" class="pager-btn" id="next-page">Next ›</button>
+          </div>
+        </div>
       </div>
     </div>
   </main>
@@ -195,6 +209,10 @@
       var bulkBar = document.getElementById("bulk-bar");
       var bulkCount = document.getElementById("bulk-count");
       var bulkDeleteBtn = document.getElementById("bulk-delete");
+      var pagerEl = document.getElementById("admin-pager");
+      var pagerInfo = document.getElementById("pager-info");
+      var prevBtn = document.getElementById("prev-page");
+      var nextBtn = document.getElementById("next-page");
       var headers = Array.prototype.slice.call(document.querySelectorAll(".admin-table th.sortable"));
 
       var leadsData = [];
@@ -205,6 +223,8 @@
       var openMenu = null;
       var selected = {};
       var visibleIds = [];
+      var page = 1;
+      var PAGE_SIZE = 15;
       var MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
       function esc(s) { var d = document.createElement("div"); d.textContent = s == null ? "" : String(s); return d.innerHTML; }
@@ -290,18 +310,29 @@
           }
           return sortDir === "asc" ? r : -r;
         });
-        visibleIds = rows.map(function (l) { return String(l.id); });
+        var n = rows.length;
+        var pages = Math.max(1, Math.ceil(n / PAGE_SIZE));
+        if (page > pages) page = pages;
+        if (page < 1) page = 1;
+        var start = (page - 1) * PAGE_SIZE;
+        var pageRows = rows.slice(start, start + PAGE_SIZE);
+        visibleIds = pageRows.map(function (l) { return String(l.id); });
+
         var total = leadsData.length;
-        leadsCount.textContent = rows.length === total
+        leadsCount.textContent = n === total
           ? total + (total === 1 ? " lead" : " leads")
-          : "Showing " + rows.length + " of " + total + " leads";
-        if (!rows.length) {
+          : "Showing " + n + " of " + total + " leads";
+
+        if (!n) {
           leadsBody.innerHTML = "";
           leadsEmpty.hidden = false;
-          leadsEmpty.textContent = total ? "No leads match your search or filter." : "No leads yet.";
+          leadsEmpty.textContent = total
+            ? "No leads match your search or filter."
+            : "No leads yet — they’ll show up here once visitors take the quiz.";
+          pagerEl.hidden = true;
         } else {
           leadsEmpty.hidden = true;
-          leadsBody.innerHTML = rows.map(function (l) {
+          leadsBody.innerHTML = pageRows.map(function (l) {
             return '<tr data-id="' + esc(l.id) + '">' +
                    '<td class="check-col"><input type="checkbox" class="row-check" data-id="' + esc(l.id) + '"' + (selected[String(l.id)] ? " checked" : "") + "></td>" +
                    "<td>" + esc(l.name) + "</td><td>" + esc(l.email) + "</td><td>" +
@@ -314,6 +345,10 @@
                      "</div>" +
                    "</td></tr>";
           }).join("");
+          pagerEl.hidden = false;
+          pagerInfo.textContent = "Showing " + (start + 1) + "–" + (start + pageRows.length) + " of " + n;
+          prevBtn.disabled = page <= 1;
+          nextBtn.disabled = page >= pages;
         }
         headers.forEach(function (th) {
           var arrow = th.querySelector(".arrow");
@@ -424,12 +459,15 @@
             sortKey = key;
             sortDir = key === "created_at" ? "desc" : "asc"; // dates default newest-first, text A→Z
           }
+          page = 1;
           renderTable();
         });
       });
 
-      filterSel.addEventListener("change", function () { filterValue = filterSel.value; renderTable(); });
-      searchInput.addEventListener("input", function () { searchValue = searchInput.value; renderTable(); });
+      filterSel.addEventListener("change", function () { filterValue = filterSel.value; page = 1; renderTable(); });
+      searchInput.addEventListener("input", function () { searchValue = searchInput.value; page = 1; renderTable(); });
+      prevBtn.addEventListener("click", function () { page--; renderTable(); });
+      nextBtn.addEventListener("click", function () { page++; renderTable(); });
 
       leadsBody.addEventListener("click", function (e) {
         var mb = e.target.closest(".row-menu-btn");
@@ -499,6 +537,7 @@
 
       refreshBtn.addEventListener("click", function () {
         refreshBtn.disabled = true;
+        page = 1;
         var prev = refreshBtn.textContent;
         refreshBtn.textContent = "Refreshing…";
         loadLeads().catch(function () {}).then(function () {
