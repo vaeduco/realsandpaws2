@@ -228,12 +228,16 @@
   }
 
   function grade() {
-    var s = 0, answered = 0;
+    var s = 0, answered = 0, answers = [];
     current.forEach(function (item, qi) {
       var sel = form.querySelector('input[name="q' + qi + '"]:checked');
-      if (sel) { answered++; if (sel.value === item.correct) s++; }
+      var chosen = sel ? sel.value : null;
+      if (sel) answered++;
+      var ok = chosen === item.correct;
+      if (ok) s++;
+      answers.push({ q: item.q, chosen: chosen, correct: item.correct, ok: ok });
     });
-    return { score: s, answered: answered };
+    return { score: s, answered: answered, answers: answers };
   }
 
   function onSubmit() {
@@ -248,16 +252,16 @@
       }
       return;
     }
-    recordResult(r.score);
+    recordResult(r.score, r.answers);
     showResult(r.score);
   }
 
-  function recordResult(score) {
+  function recordResult(score, answers) {
     if (!leadId) return; // no lead row to attach the result to
     fetch("/api/quiz-result", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id: leadId, score: score })
+      body: JSON.stringify({ id: leadId, score: score, answers: answers })
     }).catch(function () {}); // fire-and-forget; the result UI shows regardless
   }
 

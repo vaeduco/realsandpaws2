@@ -22,10 +22,28 @@ module.exports = async (req, res) => {
     if (!isFinite(score) || score < 0 || score > COUNT) { res.status(400).json({ error: "Invalid score." }); return; }
 
     var passed = score >= PASS;
+
+    // Sanitize the optional per-question answers before storing them as jsonb.
+    var answers = null;
+    if (Array.isArray(body.answers)) {
+      answers = body.answers.slice(0, 20).map(function (a) {
+        a = a || {};
+        return {
+          q: String(a.q == null ? "" : a.q).slice(0, 200),
+          chosen: a.chosen == null ? null : String(a.chosen).slice(0, 200),
+          correct: String(a.correct == null ? "" : a.correct).slice(0, 200),
+          ok: !!a.ok
+        };
+      });
+    }
+
+    var patch = { score: score, passed: passed, completed_at: new Date().toISOString() };
+    if (answers) patch.answers = answers;
+
     var r = await supabase("quiz_leads?id=eq." + id + "&score=is.null", {
       method: "PATCH",
       headers: { "Content-Type": "application/json", Prefer: "return=minimal" },
-      body: JSON.stringify({ score: score, passed: passed, completed_at: new Date().toISOString() })
+      body: JSON.stringify(patch)
     });
     if (!r.ok) {
       var detail = await r.text().catch(function () { return ""; });

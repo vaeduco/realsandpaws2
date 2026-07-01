@@ -99,6 +99,12 @@
     .lead-detail { display: grid; grid-template-columns: auto 1fr; gap: 0.35rem 1.1rem; margin: 0; padding: 0.3rem 0.2rem; font-size: 0.9rem; }
     .lead-detail dt { color: var(--muted); font-weight: 800; }
     .lead-detail dd { margin: 0; color: var(--text); word-break: break-word; }
+    .lead-answers { list-style: none; margin: 0.1rem 0 0; padding: 0; display: grid; gap: 0.3rem; }
+    .lead-answers li { color: var(--text); }
+    .lead-answers .ans-mark { font-weight: 800; }
+    .lead-answers .ans-ok .ans-mark { color: #2F7D32; }
+    .lead-answers .ans-no .ans-mark { color: #B23B2E; }
+    .lead-answers .ans-correct { color: var(--muted); font-weight: 600; }
     .admin-table th.check-col, .admin-table td.check-col { width: 1%; text-align: center; }
     .row-check, #select-all { width: 16px; height: 16px; accent-color: var(--primary-deep); cursor: pointer; }
     .bulk-bar { display: flex; align-items: center; gap: 0.9rem; flex-wrap: wrap; margin: 0 0 0.9rem; padding: 0.6rem 0.9rem; background: var(--peach); border-radius: 10px; }
@@ -401,12 +407,24 @@
         var l = leadById(id);
         if (!l) return;
         var quiz = (l.score === 0 || l.score) ? (l.score + "/10 — " + (l.passed ? "Passed" : "Failed")) : "Quiz not completed";
+        var answersHtml = "";
+        if (l.answers && l.answers.length) {
+          answersHtml = '<dt>Answers</dt><dd><ul class="lead-answers">' + l.answers.map(function (a) {
+            var chosen = (a.chosen == null || a.chosen === "") ? "(no answer)" : a.chosen;
+            var corr = a.ok ? "" : ' <span class="ans-correct">(correct: ' + esc(a.correct) + ")</span>";
+            return '<li class="' + (a.ok ? "ans-ok" : "ans-no") + '"><span class="ans-mark" aria-hidden="true">' + (a.ok ? "✓" : "✗") + "</span> " +
+                   esc(a.q) + " — <strong>" + esc(chosen) + "</strong>" + corr + "</li>";
+          }).join("") + "</ul></dd>";
+        } else if (l.score === 0 || l.score) {
+          answersHtml = "<dt>Answers</dt><dd>Not recorded for this attempt.</dd>";
+        }
         var html = '<tr class="detail-row"><td colspan="7"><dl class="lead-detail">' +
           "<dt>Name</dt><dd>" + esc(l.name) + "</dd>" +
           "<dt>Email</dt><dd>" + esc(l.email) + "</dd>" +
           "<dt>Phone</dt><dd>" + esc(l.phone) + "</dd>" +
           "<dt>Submitted</dt><dd>" + fmtDate(l.created_at) + "</dd>" +
           "<dt>Quiz result</dt><dd>" + esc(quiz) + "</dd>" +
+          answersHtml +
           "</dl></td></tr>";
         tr.classList.add("expanded");
         tr.insertAdjacentHTML("afterend", html);

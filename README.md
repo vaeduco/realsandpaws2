@@ -122,7 +122,7 @@ The browser never talks to Supabase directly. All access goes through serverless
 functions that use the **service-role key** (a server-only env var):
 
 - `POST /api/lead` — validates the three fields and inserts the lead (returns its id).
-- `POST /api/quiz-result` — records the quiz score + pass/fail for that lead once they finish (pass/fail recomputed server-side; write-once).
+- `POST /api/quiz-result` — records the quiz score + pass/fail (recomputed server-side; write-once) and the per-question answers for that lead once they finish.
 - `POST /api/admin/login` — checks `ADMIN_USER` / `ADMIN_PASSWORD` (constant-time)
   and sets an HMAC-signed, HttpOnly, SameSite session cookie (8-hour expiry).
 - `GET /api/admin/leads` — returns the leads **only** for a request with a valid
@@ -145,7 +145,8 @@ create table if not exists public.quiz_leads (
   created_at   timestamptz not null default now(),
   score        int,                 -- null until the quiz is completed
   passed       boolean,             -- true/false once completed; null = not finished
-  completed_at timestamptz
+  completed_at timestamptz,
+  answers      jsonb                -- per-question answers, shown in the admin details view
 );
 
 -- Lock the table down: with RLS on and no policies, the public/anon key has no
@@ -156,7 +157,8 @@ alter table public.quiz_leads enable row level security;
 alter table public.quiz_leads
   add column if not exists score        int,
   add column if not exists passed       boolean,
-  add column if not exists completed_at timestamptz;
+  add column if not exists completed_at timestamptz,
+  add column if not exists answers      jsonb;
 ```
 
 ### 2. Set environment variables (Vercel → Project → Settings → Environment Variables)
